@@ -1,0 +1,50 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Node.js / Frontend
+node_modules/
+dist/
+build/
+.npm/
+
+# Python / Backend
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+medverify_dev.db
+
+# AI / ML / Vector Store
+vector_store/
+models/
+datasets/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
