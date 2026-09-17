@@ -1,0 +1,113 @@
+{
+  "registry_version": "1.0.0",
+  "description": "MedVerify AI Experiment Registry — Records all experiments for reproducibility (§25)",
+  "experiments": [
+    {
+      "experiment_id": "biobert-classifier-eval",
+      "stage": 6,
+      "description": "BioBERT disease classifier evaluation on frozen test split",
+      "dataset_version": "splits_manifest.json SHA:3a25756f",
+      "model_version": "biobert-base-cased-v1.2-finetuned",
+      "config": "configs/models.yaml",
+      "random_seed": 42,
+      "top_k": null,
+      "thresholds": null,
+      "output_predictions": "Reports/biobert_test_evaluation.json",
+      "metrics_summary": {"accuracy": 0.9944, "macro_f1": 0.9953}
+    },
+    {
+      "experiment_id": "retrieval-benchmark",
+      "stage": 8,
+      "description": "Hybrid retrieval evaluation (FAISS + PubMed) on 20 clinical queries",
+      "dataset_version": "vector_store/faiss_index.bin",
+      "model_version": "all-MiniLM-L6-v2",
+      "config": "configs/retrieval.yaml",
+      "random_seed": null,
+      "top_k": 10,
+      "thresholds": null,
+      "output_predictions": "Reports/retrieval_evaluation_results.json",
+      "metrics_summary": {"recall_at_5": 1.0, "mrr": 0.925, "ndcg_at_10": 0.7552}
+    },
+    {
+      "experiment_id": "population-validation",
+      "stage": 14,
+      "description": "Population applicability P_i validation against human annotations",
+      "dataset_version": "population_ground_truth_70.json",
+      "model_version": "population-module-v1.0",
+      "config": "configs/population.yaml",
+      "random_seed": 42,
+      "top_k": null,
+      "thresholds": null,
+      "output_predictions": "Reports/population_validation_results.json",
+      "metrics_summary": {"accuracy": 0.9857, "macro_f1": 0.8774, "mae": 0.0643}
+    },
+    {
+      "experiment_id": "b0-b3-controlled-population",
+      "stage": 18,
+      "description": "B0-B3 baseline comparison on 70-item controlled population benchmark",
+      "dataset_version": "population_ground_truth_70.json",
+      "model_version": "consensus-engine-v1.0",
+      "config": "configs/experiments.yaml",
+      "random_seed": 42,
+      "top_k": null,
+      "thresholds": "configs/experiments.yaml verdict_thresholds",
+      "output_predictions": "Reports/baseline_b0_b3_results.json",
+      "metrics_summary": {
+        "B2_macro_f1": 0.2903, "B3_mult_macro_f1": 1.0,
+        "delta_macro_f1": 70.97, "mcnemar_p": 0.00018
+      }
+    },
+    {
+      "experiment_id": "b0-b3-full-test-set",
+      "stage": 18,
+      "description": "B0-B3 full baseline comparison on frozen test set (614 claims) with NLI",
+      "dataset_version": "test_frozen.json SHA:3a25756f",
+      "model_version": "cross-encoder/nli-deberta-v3-small + consensus-engine-v1.0",
+      "config": "configs/experiments.yaml + configs/population.yaml + configs/reliability.yaml",
+      "random_seed": 42,
+      "top_k": 5,
+      "thresholds": "configs/experiments.yaml verdict_thresholds",
+      "output_predictions": "Reports/full_baseline_comparison.json",
+      "metrics_summary": "pending — run experiments/run_full_baseline_comparison.py"
+    },
+    {
+      "experiment_id": "faithfulness-eval",
+      "stage": 24,
+      "description": "Explanation faithfulness verification on 200-item benchmark",
+      "dataset_version": "faithfulness_benchmark_200.json",
+      "model_version": "nli-deberta-v3-small + BioScope",
+      "config": null,
+      "random_seed": null,
+      "top_k": null,
+      "thresholds": {"nli_threshold": 0.70},
+      "output_predictions": "Reports/faithfulness_evaluation_results.json",
+      "metrics_summary": {"precision": 0.9028, "recall": 1.0, "f1": 0.9489}
+    },
+    {
+      "experiment_id": "calibration-eval",
+      "stage": 26,
+      "description": "ECE and Brier score calibration measurement on 113 pipeline outputs",
+      "dataset_version": "live pipeline outputs N=113",
+      "model_version": "full MedVerify pipeline",
+      "config": null,
+      "random_seed": null,
+      "top_k": null,
+      "thresholds": null,
+      "output_predictions": "Reports/calibration_reliability_diagram.json",
+      "metrics_summary": {"ece": 0.2322, "brier_score": 0.1627}
+    },
+    {
+      "experiment_id": "external-real-world",
+      "stage": 27,
+      "description": "External real-world evaluation on 150 unseen claims",
+      "dataset_version": "external_evaluation_150",
+      "model_version": "full MedVerify pipeline",
+      "config": null,
+      "random_seed": null,
+      "top_k": null,
+      "thresholds": null,
+      "output_predictions": "Reports/master_evaluation_matrix.json",
+      "metrics_summary": {"accuracy": 0.8667, "macro_f1": 0.8479, "ci_95": [0.7736, 0.9083]}
+    }
+  ]
+}

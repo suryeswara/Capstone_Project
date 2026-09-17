@@ -43,6 +43,7 @@ medverify_dev.db
 vector_store/
 models/
 datasets/
+med_datasets/
 
 # Editor / IDE
 .vscode/

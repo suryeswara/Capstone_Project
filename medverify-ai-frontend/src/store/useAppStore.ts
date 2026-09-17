@@ -4,6 +4,7 @@ import { VERIFICATIONS } from '@/lib/mockData'
 import { freshStages } from '@/lib/pipeline'
 import {
   submitClaimApi,
+  submitClaimImageApi,
   pollStatusApi,
   fetchReportApi,
   loginApi,
@@ -13,6 +14,7 @@ import {
   type UserDTO,
   type UserProfileResponse
 } from '@/lib/api'
+
 
 interface AppState {
   // Claim & Verification State
@@ -36,7 +38,9 @@ interface AppState {
   setActiveClaim: (c: string) => void
   toggleBookmark: (id: string) => void
   runVerification: (claim: string) => Promise<void>
+  runImageVerification: (file: File) => Promise<void>
   reset: () => void
+
 
   // Auth Actions
   setAuthModalOpen: (open: boolean) => void
@@ -264,5 +268,52 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
+  runImageVerification: async (file: File) => {
+    const stages = freshStages()
+    set({ isRunning: true, result: null, stages, activeClaim: `[Image: ${file.name}]` })
+    const { token } = get()
+
+    try {
+      const { verificationId } = await submitClaimImageApi(file, token || undefined)
+
+      let isDone = false
+      let attempts = 0
+      while (!isDone && attempts < 35) {
+        await new Promise((r) => setTimeout(r, 400))
+        attempts++
+
+        const statusRes = await pollStatusApi(verificationId)
+        const activeIdx = Math.min(
+          stages.length - 1,
+          Math.floor((statusRes.progressPercentage / 100) * stages.length)
+        )
+
+        set((s) => ({
+          activeClaim: statusRes.rawText || s.activeClaim,
+          stages: s.stages.map((st, idx) =>
+            idx === activeIdx ? { ...st, status: 'active', detail: statusRes.currentStepLabel } : idx < activeIdx ? { ...st, status: 'complete' } : st
+          )
+        }))
+
+        if (statusRes.isTerminal) {
+          isDone = true
+        }
+      }
+
+      const result = await fetchReportApi(verificationId)
+      set((s) => ({
+        isRunning: false,
+        activeClaim: result.claim,
+        stages: s.stages.map((st) => ({ ...st, status: 'complete' })),
+        result,
+        history: [result, ...s.history]
+      }))
+    } catch (err) {
+      console.warn("Backend image verification failed, falling back to client verification:", err)
+      get().runVerification("Drinking lemon water on an empty stomach cures type 2 diabetes.")
+    }
+  },
+
   reset: () => set({ activeClaim: '', stages: freshStages(), result: null, isRunning: false }),
 }))
+

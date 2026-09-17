@@ -47,9 +47,9 @@ try:
 
     print("\n2. Seeding Phase 1 Disease Categories...")
     categories = [
-        ("diabetes", "Diabetes", "distilbert-base-uncased-finetuned-v1.0"),
-        ("cardiovascular", "Cardiovascular Disease", "distilbert-base-uncased-finetuned-v1.0"),
-        ("vaccination", "Vaccination", "distilbert-base-uncased-finetuned-v1.0"),
+        ("diabetes", "Diabetes", "biobert-base-cased-v1.2-finetuned"),
+        ("cardiovascular", "Cardiovascular Disease", "biobert-base-cased-v1.2-finetuned"),
+        ("vaccination", "Vaccination", "biobert-base-cased-v1.2-finetuned"),
     ]
     for cid, cname, cver in categories:
         existing = db.query(DiseaseCategoryModel).filter(DiseaseCategoryModel.id == cid).first()

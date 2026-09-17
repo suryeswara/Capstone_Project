@@ -7,7 +7,7 @@ from sentence_transformers import SentenceTransformer
 
 # Paths
 BASE_DIR = os.getcwd()
-MANIFEST_PATH = os.path.join(BASE_DIR, "datasets", "processed", "phase1_disease_claims_manifest.json")
+MANIFEST_PATH = os.path.join(BASE_DIR, "med_datasets", "processed", "phase1_disease_claims_manifest.json")
 VECTOR_STORE_DIR = os.path.join(BASE_DIR, "vector_store")
 FAISS_INDEX_PATH = os.path.join(VECTOR_STORE_DIR, "faiss_index.bin")
 METADATA_PATH = os.path.join(VECTOR_STORE_DIR, "vector_metadata.json")

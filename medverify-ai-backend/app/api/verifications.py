@@ -12,7 +12,7 @@ import asyncio
 import logging
 from typing import List, Optional
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, status
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, status, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from app.db.session import get_db
@@ -29,6 +29,7 @@ from app.schemas.dto import (
     VersionMetadataDTO
 )
 from app.services.orchestrator import get_orchestrator
+from app.services.image_claim_extractor import extract_claim_from_image
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ async def run_real_verification_pipeline(verification_id: str, raw_text: str, di
     # Define pipeline stages with progress percentages
     stages = [
         (VerificationStatusEnum.EXTRACTING, 10, "Extracting verifiable atomic claim assertion..."),
-        (VerificationStatusEnum.CLASSIFYING, 25, "Classifying medical domain using fine-tuned DistilBERT..."),
+        (VerificationStatusEnum.CLASSIFYING, 25, "Classifying medical domain using fine-tuned BioBERT (biomedical domain model)..."),
         (VerificationStatusEnum.RETRIEVING, 45, "Retrieving evidence from FAISS vector store & live PubMed API..."),
         (VerificationStatusEnum.RANKING, 65, "Ranking evidence quality by source tier and recency..."),
         (VerificationStatusEnum.CONSENSUS, 80, "Analyzing reliability-weighted medical consensus via NLI..."),
@@ -57,15 +58,17 @@ async def run_real_verification_pipeline(verification_id: str, raw_text: str, di
         (VerificationStatusEnum.VERIFYING, 95, "Evaluating faithfulness (NLI entailment + BioScope certainty)..."),
     ]
 
-    # Safety refusal check (fast path)
-    if orchestrator.check_safety_refusal(raw_text):
+    # Safety refusal check (fast path) — Stage 11 Safety Guardrail
+    safety_result = orchestrator.check_safety_refusal(raw_text)
+    if not safety_result.is_safe_to_verify:
         db = next(get_db())
         try:
             ver = db.query(VerificationModel).filter(VerificationModel.id == verification_id).first()
             if ver:
                 ver.status = VerificationStatusEnum.REFUSED_SAFETY
                 ver.progress_percentage = 100
-                ver.current_step_label = "Refused: Input seeks personal diagnostic/treatment advice."
+                reason = safety_result.emergency_message or safety_result.refusal_reason or "Refused: Safety guardrail triggered."
+                ver.current_step_label = f"Refused: {reason[:200]}"
                 db.commit()
         finally:
             db.close()
@@ -117,6 +120,8 @@ async def run_real_verification_pipeline(verification_id: str, raw_text: str, di
             ver.consensus_summary = result.get("consensus_summary")
             ver.version_metadata = result.get("version_metadata")
 
+            ver.population_analysis = result.get("population_analysis")
+
             # Store Stage 10 dual-pass verified explanation sentences
             explanation_sentences = result.get("explanation_sentences", [])
             evidence_citations = result.get("evidence_citations", [])
@@ -146,6 +151,8 @@ async def run_real_verification_pipeline(verification_id: str, raw_text: str, di
                     pub_year=ev.get("pub_year"),
                     doi=ev.get("doi", ""),
                     reliability_score=ev.get("reliability_score", 0.5),
+                    applicability_score=ev.get("applicability_score", 1.0),
+                    population_match_type=ev.get("population_match_type", "UNKNOWN"),
                     stance=ev.get("stance", "neutral"),
                     abstract_chunk=ev.get("abstract_chunk", ""),
                     url=ev.get("url", ""),
@@ -247,6 +254,68 @@ def submit_claim(
     )
 
 
+@router.post("/claims/image", response_model=SubmitClaimResponseDTO, status_code=status.HTTP_202_ACCEPTED)
+async def submit_claim_image(
+    file: UploadFile = File(...),
+    diseaseCategory: Optional[str] = Form(None),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db: Session = Depends(get_db),
+    current_user: Optional[UserModel] = Depends(get_current_user_optional),
+):
+    """
+    Submit a medical claim by uploading an image (screenshot, infographic, WhatsApp forward).
+    Extracts text via OCR, isolates the medical claim, and queues the verification pipeline.
+    """
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+
+    extraction = extract_claim_from_image(content, filename=file.filename or "upload.jpg")
+    extracted_claim_text = extraction["extracted_claim"]
+
+    claim_id = f"clm-{uuid.uuid4().hex[:8]}"
+    verification_id = f"ver-{uuid.uuid4().hex[:8]}"
+
+    orchestrator = get_orchestrator()
+    initial_disease = diseaseCategory or orchestrator.classify_disease(extracted_claim_text)
+
+    claim = ClaimModel(
+        id=claim_id,
+        user_id=current_user.id if current_user else None,
+        raw_text=extracted_claim_text,
+        extracted_claim=extracted_claim_text,
+        disease_category=initial_disease,
+        language="en"
+    )
+    db.add(claim)
+
+    ver = VerificationModel(
+        id=verification_id,
+        claim_id=claim_id,
+        status=VerificationStatusEnum.CREATED,
+        progress_percentage=0,
+        current_step_label=f"Image processed ({file.filename}). Queuing AI verification pipeline..."
+    )
+    db.add(ver)
+    db.commit()
+
+    background_tasks.add_task(
+        run_real_verification_pipeline,
+        verification_id,
+        extracted_claim_text,
+        diseaseCategory,
+    )
+
+    return SubmitClaimResponseDTO(
+        claimId=claim_id,
+        verificationId=verification_id,
+        status="CREATED",
+        submittedAt=datetime.utcnow().isoformat() + "Z",
+        pollUrl=f"/api/verifications/{verification_id}"
+    )
+
+
+
 @router.get("/verifications/{verificationId}", response_model=VerificationStatusResponseDTO)
 def get_verification_status(verificationId: str, db: Session = Depends(get_db)):
     """Poll verification status by ID."""
@@ -321,9 +390,61 @@ async def stream_verification_status(verificationId: str):
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
+@router.get("/verifications/{verificationId}/status", response_model=VerificationStatusResponseDTO)
+def get_verification_status_alias(verificationId: str, db: Session = Depends(get_db)):
+    """Poll verification status by ID (alias matching Section 33)."""
+    return get_verification_status(verificationId, db)
+
+
+@router.get("/verifications/{verificationId}/evidence", response_model=List[EvidenceItemDTO])
+def get_verification_evidence(verificationId: str, db: Session = Depends(get_db)):
+    """Get retrieved evidence citations for a verification."""
+    citations = db.query(EvidenceCitationModel).filter(
+        EvidenceCitationModel.verification_id == verificationId
+    ).all()
+    if not citations:
+        raise HTTPException(status_code=404, detail="No evidence citations found for this verification")
+
+    return [
+        EvidenceItemDTO(
+            id=c.id,
+            title=c.title,
+            sourceType=c.source_type,
+            authors=c.authors,
+            pubYear=c.pub_year,
+            pmid=getattr(c, "pmid", None),
+            doi=c.doi,
+            similarity=getattr(c, "similarity", 0.0) or 0.0,
+            reliabilityScore=c.reliability_score,
+            applicabilityScore=getattr(c, "applicability_score", 1.0) or 1.0,
+            finalWeight=getattr(c, "final_weight", c.reliability_score) or c.reliability_score,
+            pAge=getattr(c, "p_age", 0.5) or 0.5,
+            pSex=getattr(c, "p_sex", 0.5) or 0.5,
+            pCondition=getattr(c, "p_condition", 0.5) or 0.5,
+            pRegion=getattr(c, "p_region", 0.5) or 0.5,
+            populationMatchType=getattr(c, "population_match_type", "UNKNOWN") or "UNKNOWN",
+            stance=c.stance,
+            abstractChunk=c.abstract_chunk,
+            url=c.url
+        ) for c in citations
+    ]
+
+
+@router.get("/verifications/{verificationId}/explanation", response_model=List[ExplanationSentenceDTO])
+def get_verification_explanation(verificationId: str, db: Session = Depends(get_db)):
+    """Get grounded explanation sentences with sentence-level faithfulness status."""
+    ver = db.query(VerificationModel).filter(VerificationModel.id == verificationId).first()
+    if not ver:
+        raise HTTPException(status_code=404, detail="Verification record not found")
+
+    return [
+        ExplanationSentenceDTO(**item) for item in (ver.explanation_json or [])
+    ]
+
+
 @router.get("/verifications/{verificationId}/report", response_model=VerificationReportDTO)
 def get_verification_report(verificationId: str, db: Session = Depends(get_db)):
-    """Get full verification report with evidence and credibility breakdown."""
+    """Get full verification report with evidence, 4D population breakdown, and credibility score."""
     ver = db.query(VerificationModel).filter(VerificationModel.id == verificationId).first()
     if not ver:
         raise HTTPException(status_code=404, detail="Verification record not found")
@@ -339,8 +460,17 @@ def get_verification_report(verificationId: str, db: Session = Depends(get_db)):
             sourceType=c.source_type,
             authors=c.authors,
             pubYear=c.pub_year,
+            pmid=getattr(c, "pmid", None),
             doi=c.doi,
+            similarity=getattr(c, "similarity", 0.0) or 0.0,
             reliabilityScore=c.reliability_score,
+            applicabilityScore=getattr(c, "applicability_score", 1.0) or 1.0,
+            finalWeight=getattr(c, "final_weight", c.reliability_score) or c.reliability_score,
+            pAge=getattr(c, "p_age", 0.5) or 0.5,
+            pSex=getattr(c, "p_sex", 0.5) or 0.5,
+            pCondition=getattr(c, "p_condition", 0.5) or 0.5,
+            pRegion=getattr(c, "p_region", 0.5) or 0.5,
+            populationMatchType=getattr(c, "population_match_type", "UNKNOWN") or "UNKNOWN",
             stance=c.stance,
             abstractChunk=c.abstract_chunk,
             url=c.url
@@ -364,12 +494,15 @@ def get_verification_report(verificationId: str, db: Session = Depends(get_db)):
         status=ver.status.value,
         completedAt=ver.completed_at.isoformat() + "Z" if ver.completed_at else None,
         verdict=ver.verdict.value if ver.verdict else "Insufficient Evidence",
+        systemConfidence=ver.credibility_score or 50.0,
         credibility=CredibilityBreakdownDTO(**ver.credibility_breakdown) if ver.credibility_breakdown else None,
         consensus=ConsensusDTO(**ver.consensus_summary) if ver.consensus_summary else None,
+        populationAnalysis=ver.population_analysis,
         explanation=explanation_dtos,
         evidence=evidence_dtos,
         versionMetadata=version_meta,
     )
+
 
 
 @router.get("/verifications", response_model=List[VerificationStatusResponseDTO])

@@ -69,8 +69,11 @@ class VerificationModel(Base):
 
     verdict = Column(Enum(VerdictEnum), nullable=True)
     credibility_score = Column(Float, nullable=True)
+    faithfulness_score = Column(Float, nullable=True)
+    system_confidence = Column(Float, nullable=True)
     credibility_breakdown = Column(JSON, nullable=True)
     consensus_summary = Column(JSON, nullable=True)
+    population_analysis = Column(JSON, nullable=True)
     explanation_json = Column(JSON, nullable=True)
     version_metadata = Column(JSON, nullable=True)
 
@@ -90,10 +93,30 @@ class EvidenceCitationModel(Base):
     source_type = Column(String(100), nullable=False)
     authors = Column(String(255), nullable=True)
     pub_year = Column(Integer, nullable=True)
+    pmid = Column(String(50), nullable=True)
     doi = Column(String(100), nullable=True)
-    reliability_score = Column(Float, nullable=False)
+    similarity = Column(Float, default=0.0)
+    reliability_score = Column(Float, nullable=False)  # R_i
+    applicability_score = Column(Float, default=1.0)  # P_i
+    final_weight = Column(Float, default=0.5)         # W_i = R_i * P_i
+    p_age = Column(Float, default=0.5)
+    p_sex = Column(Float, default=0.5)
+    p_condition = Column(Float, default=0.5)
+    p_region = Column(Float, default=0.5)
+    population_match_type = Column(String(50), default="UNKNOWN")
     stance = Column(String(20), nullable=False)  # 'supporting', 'contradicting', 'neutral'
     abstract_chunk = Column(Text, nullable=True)
     url = Column(String(500), nullable=True)
 
     verification = relationship("VerificationModel", back_populates="citations")
+
+class ModelVersionModel(Base):
+    __tablename__ = "model_versions"
+
+    id = Column(String(50), primary_key=True, index=True)
+    component = Column(String(100), nullable=False)   # 'disease_classifier', 'retrieval_encoder', etc.
+    model_name = Column(String(150), nullable=False)  # 'BioBERT', 'MedCPT', 'DeBERTa-v3'
+    version = Column(String(50), nullable=False)      # '1.0.0', 'R1.0'
+    hash_signature = Column(String(100), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+

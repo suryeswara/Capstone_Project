@@ -27,6 +27,11 @@ export function EvidenceCard({ evidence }: { evidence: EvidenceItem }) {
             <Badge tone={stanceTone[evidence.stance] === 'neutral' ? 'neutral' : stanceTone[evidence.stance]}>
               {stanceLabel[evidence.stance]}
             </Badge>
+            {evidence.populationMatchType && evidence.populationMatchType !== 'UNKNOWN' && (
+              <Badge tone={evidence.populationMatchType === 'MATCHED' ? 'support' : evidence.populationMatchType === 'MISMATCHED' ? 'contradict' : 'neutral'}>
+                Pop: {evidence.populationMatchType}
+              </Badge>
+            )}
             <span className="mono-label">{evidence.year}</span>
           </div>
           <h4 className="mt-2 text-[15px] font-semibold leading-snug text-ink-950">{evidence.title}</h4>
@@ -38,6 +43,11 @@ export function EvidenceCard({ evidence }: { evidence: EvidenceItem }) {
             <span className="text-sm font-semibold tabular-nums text-ink-900">{evidence.reliabilityScore}</span>
           </div>
           <span className="mono-label">reliability</span>
+          {evidence.applicabilityScore !== undefined && (
+            <div className="mt-1 flex items-center gap-1 text-xs">
+              <span className="font-mono font-medium text-clinical-700">P_i: {Math.round(evidence.applicabilityScore * 100)}%</span>
+            </div>
+          )}
         </div>
       </div>
 

@@ -3,11 +3,16 @@ import { CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
 import type { FaithfulnessSentence, EvidenceItem } from '@/types'
 import { cn } from '@/lib/utils'
 
-const statusConfig = {
+const statusConfig: Record<string, { icon: any; className: string; label: string }> = {
   verified: { icon: CheckCircle2, className: 'bg-verdict-support/10 text-verdict-support border-verdict-support/25', label: 'Verified' },
+  SUPPORTED: { icon: CheckCircle2, className: 'bg-verdict-support/10 text-verdict-support border-verdict-support/25', label: 'Supported' },
+  PARTIALLY_SUPPORTED: { icon: AlertTriangle, className: 'bg-amber-500/10 text-amber-600 border-amber-500/25', label: 'Partially Supported' },
   unsupported: { icon: AlertTriangle, className: 'bg-verdict-warn/10 text-verdict-warn border-verdict-warn/25', label: 'Unsupported' },
+  UNSUPPORTED: { icon: AlertTriangle, className: 'bg-verdict-warn/10 text-verdict-warn border-verdict-warn/25', label: 'Unsupported' },
+  CERTAINTY_ESCALATION: { icon: AlertTriangle, className: 'bg-rose-500/10 text-rose-600 border-rose-500/25', label: 'Certainty Escalation' },
   contradiction: { icon: XCircle, className: 'bg-verdict-contradict/10 text-verdict-contradict border-verdict-contradict/25', label: 'Contradiction' },
-} as const
+}
+
 
 export function FaithfulnessView({
   sentences,

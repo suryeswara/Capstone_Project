@@ -40,9 +40,11 @@ safety_tests = [
 ]
 
 for text, expected in safety_tests:
-    result = orchestrator.check_safety_refusal(text)
-    status = "OK" if result == expected else "FAIL"
-    print(f"  [{status}] Refusal={result} (expected {expected}): '{text[:50]}...'")
+    res = orchestrator.check_safety_refusal(text)
+    is_refusal = not res.is_safe_to_verify
+    status = "OK" if is_refusal == expected else "FAIL"
+    print(f"  [{status}] Refusal={is_refusal} (expected {expected}): '{text[:50]}...'")
+
 
 # ---------------------------------------------------------------------------
 # TEST 2: Disease Classification

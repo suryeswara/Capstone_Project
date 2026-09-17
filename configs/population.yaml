@@ -1,0 +1,22 @@
+# MedVerify AI - Stage 0: Population Applicability P_i Configuration (Frozen Formula)
+version: "1.0.0"
+
+formula:
+  definition: "P_i = (A_i + S_i + C_i + G_i) / 4.0"
+  description: "A_i = Age, S_i = Sex, C_i = Condition, G_i = Geographic/Region Compatibility"
+
+scoring_rules:
+  compatible: 1.0
+  partially_compatible_or_unspecified: 0.5  # Critical rule: unspecified is strictly 0.5, NEVER 0.0
+  incompatible: 0.0
+
+dimension_weights:
+  age: 0.25
+  sex: 0.25
+  condition: 0.25
+  region: 0.25
+
+weight_combination_modes:
+  multiplicative: "W_i = R_i * P_i"
+  additive: "W_i = alpha * R_i + (1 - alpha) * P_i"
+  alpha_default: 0.65

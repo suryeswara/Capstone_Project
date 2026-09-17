@@ -1,11 +1,13 @@
 """
-MedVerify AI - Stage 9: Unified Verification Orchestrator Service
+MedVerify AI - Stage 9 + 11: Unified Verification Orchestrator Service
 
 Wires the real AI pipeline end-to-end:
+    Stage 11 (Medical Safety Guardrail) ->
     Stage 6 (Disease Classifier) ->
     Stage 7 (Hybrid Retrieval & Evidence Ranking) ->
     Stage 8 (Consensus Verification & NLI Stance Detection) ->
-    Verdict + Credibility Score + Evidence Breakdown
+    Stage 10 (Explanation Generation & Faithfulness) ->
+    Verdict + Credibility Score + Evidence Breakdown + Safety Disclaimers
 
 This replaces the Stage 3 mock pipeline with real AI inference.
 """
@@ -14,7 +16,7 @@ import os
 import uuid
 import logging
 import torch
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 from datetime import datetime
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
@@ -23,8 +25,17 @@ from app.services.consensus_engine import (
     VerificationPipeline,
     FaithfulnessVerifier,
     get_certainty_level,
+    map_to_spec_label,
 )
+from app.services.population.applicability import analyze_population_applicability
 from app.services.explanation_generator import ExplanationGenerator
+from app.services.safety_guardrail import (
+    MedicalSafetyGuardrail,
+    get_safety_guardrail,
+    SafetyAction,
+    SafetyResult,
+    VulnerabilityFlag,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,19 +51,31 @@ CLASSIFIER_MODEL_DIR = os.path.join(PROJECT_ROOT, "..", "models", "biobert_disea
 VECTOR_STORE_DIR = os.path.normpath(VECTOR_STORE_DIR)
 CLASSIFIER_MODEL_DIR = os.path.normpath(CLASSIFIER_MODEL_DIR)
 
-# Disease category labels (must match Stage 6 training label map)
-LABEL_MAP = {0: "Diabetes", 1: "Cardiovascular Disease", 2: "Vaccination"}
-
-# Safety refusal trigger keywords (personal medical advice detection)
-SAFETY_REFUSAL_PATTERNS = [
-    ("i have", "should i take"),
-    ("i have", "how much"),
-    ("i have", "chest pain"),
-    ("i am", "should i stop"),
-    ("my doctor", "should i"),
-    ("i feel", "what medication"),
-    ("diagnose", "me"),
-]
+# Disease category labels (matches 22-category fine-tuned BioBERT)
+LABEL_MAP = {
+    0: "COVID-19",
+    1: "General Cancer",
+    2: "Influenza",
+    3: "Reproductive Health / Abortion",
+    4: "Breast Cancer",
+    5: "HIV/AIDS",
+    6: "Ebola Virus",
+    7: "Alzheimers Disease",
+    8: "Prostate Cancer",
+    9: "Diabetes",
+    10: "Obesity & Weight Management",
+    11: "Opioids & Pain Management",
+    12: "Measles / MMR",
+    13: "Depression",
+    14: "Heart Disease",
+    15: "Smoking & Tobacco",
+    16: "Pregnancy & Maternal Health",
+    17: "Heart Attack",
+    18: "Stroke",
+    19: "Lung Cancer",
+    20: "Autism Spectrum Disorder",
+    21: "Vaccination"
+}
 
 
 class MedVerifyOrchestrator:
@@ -68,6 +91,7 @@ class MedVerifyOrchestrator:
         self._verification_pipeline = None
         self._faithfulness_verifier = None
         self._explanation_generator = None
+        self._safety_guardrail = None
         self._initialized = False
 
     def _lazy_init(self):
@@ -107,22 +131,24 @@ class MedVerifyOrchestrator:
         logger.info("  [OK] Consensus Verification Pipeline & Explanation Generator loaded.")
 
         self._initialized = True
+
+        # 4. Safety Guardrail (Stage 11) — lightweight, no model loading
+        self._safety_guardrail = get_safety_guardrail()
+        logger.info("  [OK] Medical Safety Guardrail loaded.")
+
         logger.info("[Orchestrator] All AI models initialized successfully.")
 
     # ------------------------------------------------------------------
     # SAFETY CHECK
     # ------------------------------------------------------------------
 
-    def check_safety_refusal(self, raw_text: str) -> bool:
+    def check_safety_refusal(self, raw_text: str) -> SafetyResult:
         """
-        Returns True if the input text seeks personal medical advice
-        (diagnosis/treatment), which should trigger safety refusal.
+        Run the full Stage 11 safety analysis.
+        Returns a SafetyResult with action, flags, disclaimers, and messaging.
         """
-        lower = raw_text.lower()
-        for pattern_parts in SAFETY_REFUSAL_PATTERNS:
-            if all(part in lower for part in pattern_parts):
-                return True
-        return False
+        self._lazy_init()
+        return self._safety_guardrail.analyze(raw_text)
 
     # ------------------------------------------------------------------
     # DISEASE CLASSIFICATION (Stage 6)
@@ -172,14 +198,31 @@ class MedVerifyOrchestrator:
 
         start_time = datetime.utcnow()
 
-        # Step 1: Safety Check
-        if self.check_safety_refusal(raw_text):
+        # Step 1: Safety Check (Stage 11)
+        safety_result = self.check_safety_refusal(raw_text)
+
+        if safety_result.action == SafetyAction.EMERGENCY_REDIRECT:
             return {
                 "status": "REFUSED_SAFETY",
                 "verdict": None,
                 "credibility_score": None,
-                "reason": "Input seeks personal diagnostic or treatment advice. "
-                          "MedVerify AI verifies general medical claims only.",
+                "reason": safety_result.emergency_message,
+                "safety_action": safety_result.action.value,
+                "disclaimer": safety_result.disclaimer,
+                "disclaimer_severity": safety_result.disclaimer_severity.value,
+                "evidence": [],
+                "elapsed_seconds": 0.0,
+            }
+
+        if safety_result.action == SafetyAction.REFUSE_PERSONAL:
+            return {
+                "status": "REFUSED_SAFETY",
+                "verdict": None,
+                "credibility_score": None,
+                "reason": safety_result.refusal_reason,
+                "safety_action": safety_result.action.value,
+                "disclaimer": safety_result.disclaimer,
+                "disclaimer_severity": safety_result.disclaimer_severity.value,
                 "evidence": [],
                 "elapsed_seconds": 0.0,
             }
@@ -199,6 +242,17 @@ class MedVerifyOrchestrator:
                 faiss_top_k=5,
                 pubmed_max=3,
             )
+
+        # Step 3.5: Population Applicability Analysis
+        for ev in ranked_evidence:
+            try:
+                app_res = analyze_population_applicability(raw_text, ev)
+                ev["applicability_score"] = app_res.score
+                ev["population_match_type"] = app_res.match_result.match_type.value if app_res.match_result else "UNKNOWN"
+            except Exception as e:
+                logger.warning(f"Population analysis error for evidence: {e}")
+                ev["applicability_score"] = 1.0
+                ev["population_match_type"] = "UNKNOWN"
 
         # Step 4: NLI Stance Detection & Consensus (Stage 8)
         if ranked_evidence and self._verification_pipeline:
@@ -221,38 +275,51 @@ class MedVerifyOrchestrator:
 
         elapsed = (datetime.utcnow() - start_time).total_seconds()
 
-        # Step 5: Build evidence citation objects
+        # Step 5: Build evidence citation objects with full §11 trace fields
         evidence_citations = []
         for i, ev in enumerate(verification_result.get("evidence_breakdown", [])):
             ev_id = f"ev-{uuid.uuid4().hex[:6]}"
+            r_i = ev.get("reliability_score", 0.5)
+            p_i = ev.get("applicability_score", 1.0)
+            w_i = round(r_i * p_i, 4)
             evidence_citations.append({
+                # §11 required fields
                 "id": ev_id,
                 "title": ev.get("title", ""),
-                "source_type": ev.get("source_tier", "PubMed Article"),
+                "source": ev.get("source", "FAISS_STATIC"),
+                "source_tier": ev.get("source_tier", "PubMed Article"),
+                "evidence_type": ev.get("source_tier", "PubMed Article"),  # evidence type alias
                 "pub_year": ev.get("pub_year"),
                 "doi": ev.get("doi", ""),
-                "reliability_score": ev.get("reliability_score", 0.5),
-                "stance": ev.get("stance", "neutral"),
-                "abstract_chunk": ev.get("chunk_text", ""),
                 "url": ev.get("url", ""),
-                "source_channel": ev.get("source", "FAISS_STATIC"),
+                "citation": f"{ev.get('title', '')} ({ev.get('pub_year', 'n.d.')})",
+                "retrieval_score": ev.get("cosine_similarity", 0.0),
+                "recency": ev.get("pub_year"),
+                # Scoring trace
+                "reliability_score": r_i,
+                "applicability_score": p_i,
+                "population_match_type": ev.get("population_match_type", "UNKNOWN"),
+                "W_i": w_i,
+                # Stance
+                "stance": ev.get("stance", "neutral"),
+                "stance_value": ev.get("stance_value", 0),
                 "nli_confidence": ev.get("nli_confidence", 0.0),
                 "entailment_prob": ev.get("entailment_prob", 0.0),
                 "contradiction_prob": ev.get("contradiction_prob", 0.0),
                 "cosine_similarity": ev.get("cosine_similarity", 0.0),
+                "abstract_chunk": ev.get("chunk_text", ""),
+                "source_channel": ev.get("source", "FAISS_STATIC"),
             })
 
-        # Map verdict to DB enum
-        verdict_map = {
-            "SUPPORTED": "Supported",
-            "LIKELY_SUPPORTED": "Supported",
+        # Initial verdict display label for explanation generation
+        verdict_str_internal = verification_result.get("verdict", "INCONCLUSIVE")
+        _verdict_map_early = {
+            "SUPPORTED": "Supported", "LIKELY_SUPPORTED": "Supported",
             "INCONCLUSIVE": "Insufficient Evidence",
-            "LIKELY_REFUTED": "Contradicted",
-            "REFUTED": "Contradicted",
+            "LIKELY_REFUTED": "Contradicted", "REFUTED": "Contradicted",
+            "MIXTURE": "Mixed",
         }
-        verdict_str = verdict_map.get(
-            verification_result.get("verdict", "INCONCLUSIVE"), "Insufficient Evidence"
-        )
+        verdict_str = _verdict_map_early.get(verdict_str_internal, "Insufficient Evidence")
         credibility_score = verification_result.get("credibility_score", 50.0)
 
         # Step 6: Generate Grounded Explanation & Dual-Pass Sentence Faithfulness Verification (Stage 10)
@@ -291,22 +358,28 @@ class MedVerifyOrchestrator:
             "rawCounts": raw_counts,
         }
 
-        # Map verdict to DB enum
+        # Map verdict to display label for UI and spec label for research
         verdict_map = {
             "SUPPORTED": "Supported",
             "LIKELY_SUPPORTED": "Supported",
             "INCONCLUSIVE": "Insufficient Evidence",
             "LIKELY_REFUTED": "Contradicted",
             "REFUTED": "Contradicted",
+            "MIXTURE": "Mixed",
         }
-        verdict_str = verdict_map.get(
+        verdict_display = verdict_map.get(
             verification_result.get("verdict", "INCONCLUSIVE"), "Insufficient Evidence"
+        )
+        # Spec label (§13: TRUE/FALSE/MIXTURE/UNPROVEN)
+        spec_label = verification_result.get(
+            "spec_label",
+            map_to_spec_label(verification_result.get("verdict", "INCONCLUSIVE")),
         )
 
         # Step 7: Build version metadata
         version_metadata = {
             "modelVersion": "qwen3-8b-instruct-v1.2",
-            "diseaseClassifierVersion": "distilbert-base-uncased-finetuned-v1.0",
+            "diseaseClassifierVersion": "biobert-base-cased-v1.2-finetuned",
             "embeddingVersion": "all-MiniLM-L6-v2",
             "knowledgeBaseVersion": "kb-phase1-387chunks-v1.0",
             "rankingFormulaVersion": "rwrav-v1.0-calibrated",
@@ -314,16 +387,30 @@ class MedVerifyOrchestrator:
             "faithfulnessModelVersion": "nli-deberta-v3-small-bioscope",
         }
 
+        # Step 8: Generate verdict-specific disclaimer (Stage 11)
+        verdict_disclaimer, verdict_disclaimer_severity = self._safety_guardrail.get_verdict_disclaimer(
+            verdict=verdict_display,
+            vulnerability_flags=safety_result.vulnerability_flags if safety_result.vulnerability_flags else None,
+        )
+
         return {
             "status": "COMPLETED",
             "disease_category": disease,
-            "verdict": verdict_str,
+            "verdict": verdict_display,
+            "spec_label": spec_label,
             "credibility_score": credibility_score,
             "credibility_breakdown": credibility_breakdown,
             "consensus_summary": consensus_summary,
             "explanation_sentences": explanation_sentences,
             "evidence_citations": evidence_citations,
             "version_metadata": version_metadata,
+            "safety_analysis": {
+                "action": safety_result.action.value,
+                "vulnerability_flags": [f.value for f in safety_result.vulnerability_flags],
+                "matched_patterns": safety_result.matched_patterns,
+            },
+            "disclaimer": verdict_disclaimer,
+            "disclaimer_severity": verdict_disclaimer_severity.value,
             "elapsed_seconds": round(elapsed, 2),
         }
 

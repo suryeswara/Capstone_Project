@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" width="100%" height="100%" style="background:#ffffff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <!-- Title Header -->
+  <rect x="25" y="20" width="850" height="75" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="450" y="48" text-anchor="middle" font-size="20" font-weight="700" fill="#0f172a">Table 5: Explanation Faithfulness &amp; BioScope Certainty Guard</text>
+  <text x="450" y="74" text-anchor="middle" font-size="13" font-weight="500" fill="#475569">200-Pair Ground Truth Benchmark • Comparing Single-Pass NLI vs. MedVerify Dual-Pass (NLI + BioScope)</text>
+
+  <!-- Subplot 1: Faithfulness Recall (Higher is Better) -->
+  <g transform="translate(80, 130)">
+    <rect x="0" y="0" width="340" height="320" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+    <text x="170" y="30" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">Faithfulness Detection Recall</text>
+    <text x="170" y="50" text-anchor="middle" font-size="11" font-weight="600" fill="#0d9488">Primary Trustworthiness Metric (Target: ≥ 90.0%)</text>
+
+    <!-- Threshold Line (90%) -->
+    <line x1="30" y1="95" x2="310" y2="95" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <text x="315" y="99" font-size="10" font-weight="600" fill="#d97706">90% Target</text>
+
+    <!-- Bar 1: NLI Only (74.5%) -->
+    <rect x="65" y="134" width="75" height="136" fill="#64748b" rx="4"/>
+    <text x="102" y="125" text-anchor="middle" font-size="14" font-weight="700" fill="#64748b">74.5%</text>
+    <text x="102" y="290" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">Single-Pass</text>
+    <text x="102" y="305" text-anchor="middle" font-size="10" fill="#64748b">(NLI Only)</text>
+
+    <!-- Bar 2: Dual-Pass (100.0%) -->
+    <rect x="195" y="70" width="75" height="200" fill="#0d9488" rx="4"/>
+    <text x="232" y="60" text-anchor="middle" font-size="15" font-weight="800" fill="#0f766e">100.0%</text>
+    <text x="232" y="290" text-anchor="middle" font-size="11" font-weight="700" fill="#0f766e">MedVerify</text>
+    <text x="232" y="305" text-anchor="middle" font-size="10" fill="#0f766e">(Dual-Pass)</text>
+  </g>
+
+  <!-- Subplot 2: Certainty Inflation Rate (Lower is Better) -->
+  <g transform="translate(480, 130)">
+    <rect x="0" y="0" width="340" height="320" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+    <text x="170" y="30" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">Certainty Inflation Rate (CIR)</text>
+    <text x="170" y="50" text-anchor="middle" font-size="11" font-weight="600" fill="#b91c1c">Speculative Evidence Upgraded to Definitive (Target: ≤ 10.0%)</text>
+
+    <!-- Safety Threshold Line (10%) -->
+    <line x1="30" y1="210" x2="310" y2="210" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <text x="315" y="214" font-size="10" font-weight="600" fill="#d97706">10% Bound</text>
+
+    <!-- Bar 1: Unguarded (38.2%) -->
+    <rect x="65" y="80" width="75" height="190" fill="#e11d48" rx="4"/>
+    <text x="102" y="70" text-anchor="middle" font-size="14" font-weight="700" fill="#b91c1c">38.2%</text>
+    <text x="102" y="290" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">Unguarded</text>
+    <text x="102" y="305" text-anchor="middle" font-size="10" fill="#b91c1c">(High Hallucination)</text>
+
+    <!-- Bar 2: Guarded (4.5%) -->
+    <rect x="195" y="248" width="75" height="22" fill="#1e3a8a" rx="4"/>
+    <text x="232" y="240" text-anchor="middle" font-size="15" font-weight="800" fill="#1e3a8a">4.5%</text>
+    <text x="232" y="290" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">BioScope Guard</text>
+    <text x="232" y="305" text-anchor="middle" font-size="10" fill="#1e3a8a">(Controlled)</text>
+  </g>
+
+  <!-- Bottom Synthesis Box -->
+  <g transform="translate(80, 465)">
+    <rect x="0" y="0" width="740" height="40" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+    <text x="370" y="25" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">
+      Conclusion: BioScope linguistic guard eliminates 88.2% of certainty inflation cases while maintaining 100.0% Faithfulness Recall.
+    </text>
+  </g>
+</svg>

@@ -99,16 +99,21 @@ class ExplanationGenerator:
                     nli_entailment_prob=entailment_prob,
                 )
 
-                if faith_res["is_faithful"]:
-                    status = "verified"
+                if faith_res.get("certainty_inflated", False):
+                    status = "CERTAINTY_ESCALATION"
+                elif faith_res["is_faithful"]:
+                    status = "SUPPORTED"
                     verified_count += 1
                 elif contradiction_prob > 0.40 or nli_res["stance"] == "contradicting":
-                    status = "contradiction"
+                    status = "UNSUPPORTED"
+                elif entailment_prob >= 0.50:
+                    status = "PARTIALLY_SUPPORTED"
+                    verified_count += 0.5
                 else:
-                    status = "unsupported"
+                    status = "UNSUPPORTED"
             elif not self.stance_detector and cited_ids:
                 # Fallback if NLI detector is not passed
-                status = "verified"
+                status = "SUPPORTED"
                 verified_count += 1
                 nli_conf = 0.90
 
@@ -120,6 +125,7 @@ class ExplanationGenerator:
                 "certaintyLevel": certainty_level,
                 "citedEvidenceIds": cited_ids,
             })
+
 
         # Step 3: Compute faithfulnessConfidence (%)
         total_s = len(verified_sentences)
@@ -155,6 +161,12 @@ class ExplanationGenerator:
         ev2_id = top_ev2.get("id", "ev-2") if top_ev2 else None
         ev2_type = top_ev2.get("source_type", "PubMed Article") if top_ev2 else ""
 
+        # Check for population mismatch in cited evidence
+        has_pop_mismatch = any(
+            ev.get("population_match_type") == "MISMATCHED" or ev.get("applicability_score", 1.0) < 0.50
+            for ev in evidence_citations
+        )
+
         if verdict == "Supported":
             # Sentence 1: Direct summary of supporting consensus
             sentences.append({
@@ -166,8 +178,13 @@ class ExplanationGenerator:
                 "text": f"Findings indicate that {ev1_title.rstrip('.')}.",
                 "cited_ids": [ev1_id]
             })
-            # Sentence 3: Secondary supporting consensus if available
-            if top_ev2 and ev2_id:
+            # Sentence 3: Secondary supporting consensus or population note
+            if has_pop_mismatch:
+                sentences.append({
+                    "text": "Evidence from non-matching demographic populations was weighted lower to ensure consensus applicability.",
+                    "cited_ids": [ev1_id]
+                })
+            elif top_ev2 and ev2_id:
                 sentences.append({
                     "text": f"Additional data from a {ev2_type} reinforces these findings with a high reliability score.",
                     "cited_ids": [ev2_id]
@@ -184,7 +201,12 @@ class ExplanationGenerator:
                 "text": f"Studies demonstrate no clinical support for this claim, showing: {ev1_title.rstrip('.')}.",
                 "cited_ids": [ev1_id]
             })
-            if top_ev2 and ev2_id:
+            if has_pop_mismatch:
+                sentences.append({
+                    "text": "Demographic analysis weighted studies on non-target population groups lower in final consensus aggregation.",
+                    "cited_ids": [ev1_id]
+                })
+            elif top_ev2 and ev2_id:
                 sentences.append({
                     "text": f"Consensus analysis across multiple {ev2_type} sources confirms the claim is unfounded.",
                     "cited_ids": [ev2_id]
@@ -196,9 +218,15 @@ class ExplanationGenerator:
                 "text": f"Current medical literature presents mixed or limited evidence regarding this claim in {disease_category.lower()}.",
                 "cited_ids": [ev1_id]
             })
-            sentences.append({
-                "text": f"Available evidence from a {ev1_type} requires further high-quality randomized controlled trials to establish definitive conclusions.",
-                "cited_ids": [ev1_id]
-            })
+            if has_pop_mismatch:
+                sentences.append({
+                    "text": "Target population mismatches in available studies contributed to an inconclusive verdict.",
+                    "cited_ids": [ev1_id]
+                })
+            else:
+                sentences.append({
+                    "text": f"Available evidence from a {ev1_type} requires further high-quality randomized controlled trials to establish definitive conclusions.",
+                    "cited_ids": [ev1_id]
+                })
 
         return sentences

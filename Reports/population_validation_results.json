@@ -1,0 +1,61 @@
+{
+  "benchmark": "Population Ground Truth (N=70) & Hierarchy Validation",
+  "sample_size": 70,
+  "population_matching": {
+    "accuracy": 0.9857,
+    "macro_f1": 0.8774,
+    "mae": 0.0643,
+    "cohen_kappa": 1.0,
+    "confusion_matrix": [
+      [
+        14,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        54
+      ]
+    ],
+    "class_names": [
+      "MISMATCH",
+      "PARTIAL",
+      "COMPATIBLE"
+    ]
+  },
+  "reliability_scoring": {
+    "monotonic_hierarchy": true,
+    "hierarchy_evaluations": [
+      {
+        "tier": "Systematic Review / Meta-Analysis",
+        "r_score": 0.8596
+      },
+      {
+        "tier": "Randomized Controlled Trial (RCT)",
+        "r_score": 0.8476
+      },
+      {
+        "tier": "Cohort Study / Observational",
+        "r_score": 0.614
+      },
+      {
+        "tier": "Case-Control / Case Series",
+        "r_score": 0.4709
+      },
+      {
+        "tier": "Expert Clinical Consensus / Guideline",
+        "r_score": 0.4524
+      },
+      {
+        "tier": "Preprint (medRxiv/bioRxiv)",
+        "r_score": 0.2866
+      }
+    ]
+  }
+}

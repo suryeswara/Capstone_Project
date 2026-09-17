@@ -127,7 +127,28 @@ export async function submitClaimApi(rawText: string, token?: string): Promise<S
   return res.json()
 }
 
+export async function submitClaimImageApi(file: File, token?: string): Promise<SubmitClaimResponse> {
+  const headers: Record<string, string> = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const res = await fetch(`${API_BASE}/claims/image`, {
+    method: 'POST',
+    headers,
+    body: formData
+  })
+  if (!res.ok) {
+    throw new Error(`Failed to upload claim image: ${res.statusText}`)
+  }
+  return res.json()
+}
+
 export async function pollStatusApi(verificationId: string): Promise<VerificationStatusResponse> {
+
   const res = await fetch(`${API_BASE}/verifications/${verificationId}`)
   if (!res.ok) {
     throw new Error(`Failed to poll status: ${res.statusText}`)

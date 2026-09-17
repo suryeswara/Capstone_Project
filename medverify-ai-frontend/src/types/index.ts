@@ -1,8 +1,8 @@
-export type DiseaseCategory = 'Cardiovascular Disease' | 'Vaccination' | 'Diabetes'
+export type DiseaseCategory = 'Cardiovascular Disease' | 'Vaccination' | 'Diabetes' | 'General Medicine'
 
-export type Verdict = 'Supported' | 'Contradicted' | 'Insufficient Evidence' | 'Mixed'
+export type Verdict = 'Supported' | 'Contradicted' | 'Insufficient Evidence' | 'Mixed' | 'TRUE' | 'FALSE' | 'MIXTURE' | 'UNPROVEN'
 
-export type SourceType = 'WHO Guideline' | 'CDC Guideline' | 'Systematic Review' | 'RCT' | 'PubMed Article' | 'Cohort Study' | 'Preprint'
+export type SourceType = 'WHO Guideline' | 'CDC Guideline' | 'Systematic Review' | 'RCT' | 'PubMed Article' | 'Cohort Study' | 'Preprint' | string
 
 export type EvidenceStance = 'supporting' | 'contradicting' | 'neutral'
 
@@ -10,13 +10,24 @@ export interface EvidenceItem {
   id: string
   title: string
   source: SourceType
-  authors: string
-  year: number
-  doi: string
-  reliabilityScore: number // 0-100, source-quality weighting
+  authors?: string
+  year?: number
+  pubYear?: number
+  doi?: string
+  pmid?: string
+  similarity?: number
+  reliabilityScore: number // R_i (0-100 or 0-1)
+  applicabilityScore?: number // P_i (0-100 or 0-1)
+  finalWeight?: number // W_i = R_i * P_i
+  pAge?: number
+  pSex?: number
+  pCondition?: number
+  pRegion?: number
+  populationMatchType?: 'MATCHED' | 'PARTIAL' | 'MISMATCHED' | 'UNKNOWN'
   stance: EvidenceStance
-  abstract: string
-  url: string
+  abstract?: string
+  abstractChunk?: string
+  url?: string
 }
 
 export type PipelineStageStatus = 'pending' | 'active' | 'complete' | 'flagged'
@@ -33,7 +44,7 @@ export interface PipelineStage {
 export interface FaithfulnessSentence {
   id: string
   text: string
-  status: 'verified' | 'unsupported' | 'contradiction'
+  status: 'verified' | 'unsupported' | 'contradiction' | 'SUPPORTED' | 'PARTIALLY_SUPPORTED' | 'UNSUPPORTED' | 'CERTAINTY_ESCALATION'
   confidence: number
   evidenceIds: string[]
 }
@@ -59,6 +70,7 @@ export interface VerificationRecord {
   disease: DiseaseCategory
   submittedAt: string
   verdict: Verdict
+  systemConfidence?: number
   credibility: CredibilityBreakdown
   evidence: EvidenceItem[]
   consensusTimeline: ConsensusPoint[]
@@ -66,3 +78,4 @@ export interface VerificationRecord {
   modelVersion: string
   bookmarked?: boolean
 }
+

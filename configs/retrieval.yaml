@@ -1,0 +1,40 @@
+# MedVerify AI - Stage 0: Retrieval Configuration (Frozen)
+version: "1.0.0"
+
+retrieval:
+  faiss_index_path: "vector_store/faiss_index.bin"
+  metadata_path: "vector_store/vector_metadata.json"
+  snapshot_evidence_path: "med_datasets/evaluation/frozen_evidence_snapshot.json"
+  
+  # Dual Mode: Frozen Snapshot for Research, Live Hybrid for Production
+  research_mode: true
+  use_frozen_snapshot_in_research: true
+
+  top_k_static: 5
+  top_k_live: 3
+  top_k_final_ranked: 5
+  similarity_threshold: 0.35
+
+  deduplication:
+    enabled: true
+    pmid_match: true
+    doi_match: true
+    text_cosine_threshold: 0.88
+
+  evidence_tiers:
+    tier_1:
+      name: "Official Health Authorities"
+      sources: ["WHO", "CDC", "NIH", "FDA", "NHS", "ECDC"]
+      base_weight: 1.00
+    tier_2:
+      name: "Systematic Reviews & Meta-Analyses / RCTs"
+      sources: ["Cochrane", "Lancet", "NEJM", "JAMA", "BMJ", "Nature Medicine"]
+      base_weight: 0.95
+    tier_3:
+      name: "Observational & Cohort Studies"
+      sources: ["Peer-Reviewed Journals", "PubMed"]
+      base_weight: 0.75
+    tier_4:
+      name: "Narrative Reviews / Preprints"
+      sources: ["MedRxiv", "BioRxiv", "Case Reports"]
+      base_weight: 0.50

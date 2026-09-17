@@ -16,6 +16,7 @@ import logging
 import requests
 import numpy as np
 import faiss
+import xml.etree.ElementTree as ET
 from sentence_transformers import SentenceTransformer
 from typing import List, Dict, Optional, Tuple
 
@@ -125,10 +126,47 @@ class PubMedRetriever:
 
     BASE_SEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
     BASE_FETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
+    BASE_EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
     TIMEOUT = 8  # seconds
 
+    def _fetch_abstracts(self, id_list: List[str]) -> Dict[str, str]:
+        """
+        Batch fetch study abstract text via NCBI efetch XML API.
+        Returns a mapping of pmid -> abstract_text.
+        """
+        abstract_map = {}
+        if not id_list:
+            return abstract_map
+
+        try:
+            params = {
+                "db": "pubmed",
+                "id": ",".join(id_list),
+                "retmode": "xml",
+            }
+            resp = requests.get(self.BASE_EFETCH, params=params, timeout=self.TIMEOUT)
+            if resp.status_code == 200:
+                root = ET.fromstring(resp.content)
+                for article in root.findall(".//PubmedArticle"):
+                    pmid_elem = article.find(".//MedlineCitation/PMID")
+                    if pmid_elem is not None and pmid_elem.text:
+                        pmid = pmid_elem.text.strip()
+                        abstract_parts = [
+                            elem.text.strip()
+                            for elem in article.findall(".//Abstract/AbstractText")
+                            if elem.text and elem.text.strip()
+                        ]
+                        if abstract_parts:
+                            full_abstract = " ".join(abstract_parts)
+                            # Keep first 600 characters for concise NLI premise
+                            abstract_map[pmid] = full_abstract[:600]
+        except Exception as e:
+            logger.warning(f"Could not fetch full abstracts via efetch: {e}. Falling back to titles.")
+
+        return abstract_map
+
     def search(self, query: str, disease_category: str = "", max_results: int = 5) -> List[Dict]:
-        """Search PubMed and retrieve article summaries."""
+        """Search PubMed and retrieve article summaries and abstracts."""
         results = []
         try:
             # Step 1: Search for PMIDs
@@ -147,12 +185,15 @@ class PubMedRetriever:
                 logger.warning(f"PubMed returned 0 results for query: {query[:50]}")
                 return results
 
-            # Step 2: Fetch article summaries
+            # Step 2: Fetch article summaries (metadata, titles, dates)
             ids_str = ",".join(id_list)
             fetch_params = {"db": "pubmed", "id": ids_str, "retmode": "json"}
             fetch_resp = requests.get(self.BASE_FETCH, params=fetch_params, timeout=self.TIMEOUT)
             fetch_resp.raise_for_status()
             result_dict = fetch_resp.json().get("result", {})
+
+            # Step 2.5: Batch fetch genuine abstract paragraphs via efetch
+            abstract_map = self._fetch_abstracts(id_list)
 
             for pmid in id_list:
                 article = result_dict.get(str(pmid), {})
@@ -191,10 +232,18 @@ class PubMedRetriever:
                     is_peer_reviewed=True,
                 )
 
+                # Include abstract if available for NLI stance detection
+                abstract_text = abstract_map.get(str(pmid), "")
+                if abstract_text:
+                    chunk_text = f"PubMed Article (PMID:{pmid}): {title}. Abstract: {abstract_text}"
+                else:
+                    chunk_text = f"PubMed Article (PMID:{pmid}): {title}"
+
                 results.append({
                     "source": "PUBMED_LIVE",
                     "title": title.rstrip("."),
-                    "chunk_text": f"PubMed Article (PMID:{pmid}): {title}",
+                    "chunk_text": chunk_text,
+                    "abstract": abstract_text,
                     "source_tier": source_tier,
                     "pub_year": pub_year,
                     "disease_category": disease_category,

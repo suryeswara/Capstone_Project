@@ -1,0 +1,48 @@
+{
+  "experiment": "B2_vs_B3_Statistical_Analysis",
+  "spec_sections": [
+    "\u00a718",
+    "\u00a719",
+    "\u00a720"
+  ],
+  "sample_size": 10,
+  "core_metrics": {
+    "B2_macro_f1": 0.2532,
+    "B3_macro_f1": 0.2532,
+    "delta_macro_f1": 0.0,
+    "delta_macro_f1_percent": 0.0,
+    "B2_accuracy": 0.5,
+    "B3_accuracy": 0.5,
+    "delta_accuracy_percent": 0.0
+  },
+  "bootstrap_delta_f1": {
+    "mean_delta": 0.0,
+    "ci_lower": 0.0,
+    "ci_upper": 0.0,
+    "std": 0.0
+  },
+  "mcnemar_test": {
+    "contingency_table": {
+      "both_correct": 5,
+      "b2_wrong_b3_right": 0,
+      "b2_right_b3_wrong": 0,
+      "both_wrong": 5
+    },
+    "chi2_statistic": 0.0,
+    "p_value": 1.0,
+    "statistically_significant": false
+  },
+  "effect_size": {
+    "cohens_h": 0.0,
+    "interpretation": "negligible"
+  },
+  "verdict_change_analysis": {
+    "VCR_percent": 0.0,
+    "CCR_percent": 0,
+    "total_changes": 0,
+    "improved": 0,
+    "degraded": 0,
+    "lateral": 0
+  },
+  "change_log": []
+}

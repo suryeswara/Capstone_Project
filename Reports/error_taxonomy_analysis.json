@@ -1,0 +1,113 @@
+{
+  "experiment": "Error_Taxonomy_Analysis",
+  "spec_section": "\u00a721",
+  "timestamp": "2026-09-15T16:53:15.026098Z",
+  "total_claims": 10,
+  "b3_correct": 5,
+  "b3_errors": 5,
+  "b3_accuracy": 0.5,
+  "error_distribution": {
+    "E1": {
+      "count": 4,
+      "percent": 80.0,
+      "description": "Retrieval failure"
+    },
+    "E2": {
+      "count": 0,
+      "percent": 0.0,
+      "description": "Reliability failure"
+    },
+    "E3": {
+      "count": 0,
+      "percent": 0.0,
+      "description": "Population extraction failure"
+    },
+    "E4": {
+      "count": 0,
+      "percent": 0.0,
+      "description": "Population matching failure"
+    },
+    "E5": {
+      "count": 0,
+      "percent": 0.0,
+      "description": "Claim extraction failure"
+    },
+    "E6": {
+      "count": 0,
+      "percent": 0.0,
+      "description": "Claim decomposition failure"
+    },
+    "E7": {
+      "count": 0,
+      "percent": 0.0,
+      "description": "Evidence interpretation failure"
+    },
+    "E8": {
+      "count": 1,
+      "percent": 20.0,
+      "description": "Claim/evidence strength mismatch"
+    },
+    "E9": {
+      "count": 0,
+      "percent": 0.0,
+      "description": "Conflicting evidence"
+    },
+    "E10": {
+      "count": 0,
+      "percent": 0.0,
+      "description": "Explanation hallucination"
+    },
+    "E11": {
+      "count": 0,
+      "percent": 0.0,
+      "description": "Ambiguity"
+    }
+  },
+  "error_details": [
+    {
+      "claim_id": "pubhealth-25793",
+      "gold": "TRUE",
+      "b3_prediction": "UNPROVEN",
+      "b2_prediction": "UNPROVEN",
+      "error_code": "E1",
+      "error_description": "Retrieval failure",
+      "b3_consensus": 0.0
+    },
+    {
+      "claim_id": "pubhealth-9510",
+      "gold": "TRUE",
+      "b3_prediction": "UNPROVEN",
+      "b2_prediction": "UNPROVEN",
+      "error_code": "E1",
+      "error_description": "Retrieval failure",
+      "b3_consensus": 0.189
+    },
+    {
+      "claim_id": "pubhealth-9185",
+      "gold": "MIXTURE",
+      "b3_prediction": "UNPROVEN",
+      "b2_prediction": "UNPROVEN",
+      "error_code": "E8",
+      "error_description": "Claim/evidence strength mismatch",
+      "b3_consensus": 0.189
+    },
+    {
+      "claim_id": "pubhealth-11502",
+      "gold": "FALSE",
+      "b3_prediction": "UNPROVEN",
+      "b2_prediction": "UNPROVEN",
+      "error_code": "E1",
+      "error_description": "Retrieval failure",
+      "b3_consensus": 0.1897
+    },
+    {
+      "claim_id": "coaid-real_07-15",
+      "gold": "TRUE",
+      "b3_prediction": "UNPROVEN",
+      "b2_prediction": "UNPROVEN",
+      "error_code": "E1",
+      "error_description": "Retrieval failure",
+      "b3_consensus": 0.0
+    }
+  ]
+}

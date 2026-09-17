@@ -1,0 +1,64 @@
+# MedVerify AI - Stage 0: Model Stack Configuration (Frozen)
+version: "1.0.0"
+date_frozen: "2026-09-08"
+
+models:
+  disease_classifier:
+    model_name: "BioBERT"
+    backbone: "dmis-lab/biobert-base-cased-v1.2"
+    local_dir: "models/biobert_disease_classifier"
+    num_labels: 22
+    label_map:
+      0: "COVID-19"
+      1: "General Cancer"
+      2: "Influenza"
+      3: "Reproductive Health / Abortion"
+      4: "Breast Cancer"
+      5: "HIV/AIDS"
+      6: "Ebola Virus"
+      7: "Alzheimers Disease"
+      8: "Prostate Cancer"
+      9: "Diabetes"
+      10: "Obesity & Weight Management"
+      11: "Opioids & Pain Management"
+      12: "Measles / MMR"
+      13: "Depression"
+      14: "Heart Disease"
+      15: "Smoking & Tobacco"
+      16: "Pregnancy & Maternal Health"
+      17: "Heart Attack"
+      18: "Stroke"
+      19: "Lung Cancer"
+      20: "Autism Spectrum Disorder"
+      21: "Vaccination"
+    max_length: 128
+    dropout_rate: 0.1
+    freeze_decision: "Frozen as primary 22-category medical domain classifier"
+
+  retrieval_encoder:
+    model_name: "MedCPT"
+    query_encoder: "ncbi/MedCPT-Query-Encoder"
+    article_encoder: "ncbi/MedCPT-Article-Encoder"
+    embedding_dim: 768
+    similarity_metric: "cosine"
+
+  nli_stance:
+    model_name: "NLI-DeBERTa-v3-small"
+    hf_path: "cross-encoder/nli-deberta-v3-small"
+    task: "text-classification"
+    label_mapping:
+      ENTAILMENT: "supporting"
+      CONTRADICTION: "contradicting"
+      NEUTRAL: "neutral"
+
+  explanation_generator:
+    primary_model: "gemma-3-12b-it"
+    fallback_model: "meta-llama/Llama-3.1-8B-Instruct"
+    temperature: 0.1
+    max_tokens: 512
+    certainty_guard: true
+
+  faithfulness_verifier:
+    nli_model: "cross-encoder/nli-deberta-v3-small"
+    nli_threshold: 0.70
+    bioscope_hedging: true

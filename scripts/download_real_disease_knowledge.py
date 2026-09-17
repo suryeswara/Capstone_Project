@@ -8,7 +8,7 @@ across Phase 1 disease categories:
 3. Vaccination & Immunization (MMR Safety, Herd Immunity, Influenza, COVID-19, Efficacy, Autism Myth Refutation)
 
 Saves rich structured passages with PMIDs, source quality tiers, publication years, and abstract text
-to datasets/processed/real_disease_knowledge_base.json.
+to med_datasets/processed/real_disease_knowledge_base.json.
 """
 
 import os
@@ -18,7 +18,7 @@ import urllib.request
 import urllib.parse
 import time
 
-DATASETS_DIR = os.path.join(os.getcwd(), "datasets")
+DATASETS_DIR = os.path.join(os.getcwd(), "med_datasets")
 PROCESSED_DIR = os.path.join(DATASETS_DIR, "processed")
 os.makedirs(PROCESSED_DIR, exist_ok=True)
 

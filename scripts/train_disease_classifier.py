@@ -1,3 +1,13 @@
+"""
+MedVerify AI — Phase 2: BioBERT Disease Classifier Fine-Tuning (All 22 Categories)
+
+Trains BioBERT (dmis-lab/biobert-base-cased-v1.2) strictly on:
+- med_datasets/splits/train_frozen.json (2,861 claims across 22 disease categories)
+- Validates on med_datasets/splits/val_frozen.json (613 claims)
+- Saves best checkpoint to models/biobert_disease_classifier/
+- Handles class imbalance via inverse-frequency class-weighted CrossEntropyLoss.
+"""
+
 import os
 import json
 import numpy as np
@@ -6,81 +16,18 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from torch.optim import AdamW
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, f1_score, precision_score, recall_score, accuracy_score
+from sklearn.metrics import f1_score, accuracy_score
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-# Setup Paths
-BASE_DIR = os.getcwd()
-MANIFEST_PATH = os.path.join(BASE_DIR, "datasets", "processed", "phase1_disease_claims_manifest.json")
-MODEL_SAVE_DIR = os.path.join(BASE_DIR, "models", "biobert_disease_classifier")
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SPLITS_DIR = os.path.join(PROJECT_ROOT, "med_datasets", "splits")
+MANIFEST_FILE = os.path.join(SPLITS_DIR, "splits_manifest.json")
+MODEL_SAVE_DIR = os.path.join(PROJECT_ROOT, "models", "biobert_disease_classifier")
 
 os.makedirs(MODEL_SAVE_DIR, exist_ok=True)
 
-print("=" * 80)
-print("MEDVERIFY AI -- STAGE 6 DISEASE CLASSIFIER MODEL FINE-TUNING")
-print("=" * 80)
-
-# Class Mapping
-LABEL_MAP = {
-    "Diabetes": 0,
-    "Cardiovascular Disease": 1,
-    "Vaccination": 2
-}
-REVERSE_LABEL_MAP = {v: k for k, v in LABEL_MAP.items()}
-
-# 1. Load Dataset Manifest
-print("\n[1/5] Loading Stage 4 Dataset Manifest & Oversampling Minority Classes...")
-with open(MANIFEST_PATH, "r", encoding="utf-8") as f:
-    raw_data = json.load(f)
-
-records = []
-for item in raw_data:
-    claim_text = item.get("claim_text", "").strip()
-    category = item.get("disease_category", "")
-    if claim_text and category in LABEL_MAP:
-        records.append({
-            "text": claim_text,
-            "label": LABEL_MAP[category]
-        })
-
-df_raw = pd.DataFrame(records)
-print(f"  Raw Dataset Counts:\n{df_raw['label'].value_counts().rename(index=REVERSE_LABEL_MAP)}")
-
-# Class Balancing via Resampling to ensure robust training & stratify
-target_count = 150
-balanced_dfs = []
-for label_id in [0, 1, 2]:
-    sub_df = df_raw[df_raw["label"] == label_id]
-    if len(sub_df) < target_count:
-        resampled_sub = sub_df.sample(target_count, replace=True, random_state=42)
-        balanced_dfs.append(resampled_sub)
-    else:
-        balanced_dfs.append(sub_df.sample(target_count, random_state=42))
-
-df = pd.concat(balanced_dfs, ignore_index=True)
-print(f"\n  [OK] Balanced Dataset (150 samples per class = 450 total claims):")
-print(df["label"].value_counts().rename(index=REVERSE_LABEL_MAP))
-
-# 2. Partition Train (70%), Val (15%), Test (15%) Splits
-print("\n[2/5] Partitioning Hashed Train / Val / Test Splits...")
-train_df, test_val_df = train_test_split(df, test_size=0.30, random_state=42, stratify=df["label"])
-val_df, test_df = train_test_split(test_val_df, test_size=0.50, random_state=42, stratify=test_val_df["label"])
-
-print(f"  Train Set: {len(train_df)} samples")
-print(f"  Val Set:   {len(val_df)} samples")
-print(f"  Test Set:  {len(test_df)} samples (Frozen Held-Out)")
-
-# 3. Load Pretrained Transformer Model
-MODEL_NAME = "distilbert-base-uncased"
-print(f"\n[3/5] Loading Pretrained Transformer Backbone: '{MODEL_NAME}'...")
-
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, num_labels=3)
-
-# PyTorch Dataset Class
 class MedicalClaimDataset(Dataset):
-    def __init__(self, texts, labels, tokenizer, max_len=128):
+    def __init__(self, texts, labels, tokenizer, max_len=64):
         self.texts = list(texts)
         self.labels = list(labels)
         self.tokenizer = tokenizer
@@ -105,93 +52,116 @@ class MedicalClaimDataset(Dataset):
             "label": torch.tensor(label, dtype=torch.long)
         }
 
-train_dataset = MedicalClaimDataset(train_df["text"], train_df["label"], tokenizer)
-val_dataset = MedicalClaimDataset(val_df["text"], val_df["label"], tokenizer)
-test_dataset = MedicalClaimDataset(test_df["text"], test_df["label"], tokenizer)
+def train_classifier():
+    print("=" * 80)
+    print("MEDVERIFY AI — PHASE 2: BIOBERT 22-CATEGORY DISEASE CLASSIFIER FINE-TUNING")
+    print("=" * 80)
 
-train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
-test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
+    # Load categories from manifest
+    with open(MANIFEST_FILE, "r", encoding="utf-8") as f:
+        manifest = json.load(f)
 
-# 4. Fine-Tuning Training Loop
-print("\n[4/5] Starting Model Fine-Tuning...")
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"  Training Hardware Device: {device}")
-model.to(device)
+    disease_categories = manifest.get("disease_categories", [])
+    num_classes = len(disease_categories)
+    print(f"Total Target Disease Categories: {num_classes}")
 
-optimizer = AdamW(model.parameters(), lr=3e-5)
-epochs = 3
+    label_map = {cat: idx for idx, cat in enumerate(disease_categories)}
 
-for epoch in range(epochs):
-    model.train()
-    total_loss = 0.0
-    for batch in train_loader:
-        optimizer.zero_grad()
-        input_ids = batch["input_ids"].to(device)
-        attention_mask = batch["attention_mask"].to(device)
-        labels = batch["label"].to(device)
+    train_file = os.path.join(SPLITS_DIR, "train_frozen.json")
+    val_file = os.path.join(SPLITS_DIR, "val_frozen.json")
 
-        outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
-        loss = outputs.loss
-        loss.backward()
-        optimizer.step()
-        total_loss += loss.item()
+    with open(train_file, "r", encoding="utf-8") as f:
+        train_records = json.load(f)
+    with open(val_file, "r", encoding="utf-8") as f:
+        val_records = json.load(f)
 
-    avg_loss = total_loss / len(train_loader)
-    
-    # Validation Evaluation
-    model.eval()
-    val_preds, val_labels = [], []
-    with torch.no_grad():
-        for batch in val_loader:
+    print(f"Loaded Frozen Train: {len(train_records)} claims")
+    print(f"Loaded Frozen Val:   {len(val_records)} claims")
+
+    train_df = pd.DataFrame(train_records)
+    val_df = pd.DataFrame(val_records)
+
+    # Compute inverse class frequencies for weighted loss
+    counts_map = train_df["label"].value_counts().to_dict()
+    total_samples = len(train_df)
+    class_weights = []
+    for c_id in range(num_classes):
+        cnt = counts_map.get(c_id, 1)
+        w = total_samples / (num_classes * cnt)
+        class_weights.append(w)
+
+    class_weights_tensor = torch.tensor(class_weights, dtype=torch.float)
+
+    MODEL_NAME = "dmis-lab/biobert-base-cased-v1.2"
+    print(f"\nLoading BioBERT backbone: '{MODEL_NAME}' with num_labels={num_classes}...")
+
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+    model = AutoModelForSequenceClassification.from_pretrained(
+        MODEL_NAME,
+        num_labels=num_classes,
+        ignore_mismatched_sizes=True
+    )
+
+    train_dataset = MedicalClaimDataset(train_df["claim_text"], train_df["label"], tokenizer, max_len=64)
+    val_dataset = MedicalClaimDataset(val_df["claim_text"], val_df["label"], tokenizer, max_len=64)
+
+    train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Execution Hardware: {device}")
+    model.to(device)
+    class_weights_tensor = class_weights_tensor.to(device)
+    loss_fn = nn.CrossEntropyLoss(weight=class_weights_tensor)
+
+    optimizer = AdamW(model.parameters(), lr=2e-5, weight_decay=0.01)
+    epochs = 4
+    best_val_macro_f1 = 0.0
+
+    print("\nStarting Fine-Tuning Loop across 22 categories...")
+    for epoch in range(epochs):
+        model.train()
+        total_loss = 0.0
+        for batch in train_loader:
+            optimizer.zero_grad()
             input_ids = batch["input_ids"].to(device)
             attention_mask = batch["attention_mask"].to(device)
+            labels = batch["label"].to(device)
+
             outputs = model(input_ids, attention_mask=attention_mask)
-            preds = torch.argmax(outputs.logits, dim=1).cpu().numpy()
-            val_preds.extend(preds)
-            val_labels.extend(batch["label"].numpy())
+            loss = loss_fn(outputs.logits, labels)
+            loss.backward()
+            optimizer.step()
+            total_loss += loss.item()
 
-    val_f1 = f1_score(val_labels, val_preds, average="macro", zero_division=0)
-    print(f"  Epoch {epoch+1}/{epochs} | Train Loss: {avg_loss:.4f} | Val Macro-F1: {val_f1:.4f}")
+        avg_train_loss = total_loss / len(train_loader)
 
-# Save Model Weights
-model.save_pretrained(MODEL_SAVE_DIR)
-tokenizer.save_pretrained(MODEL_SAVE_DIR)
-print(f"\n  [OK] Fine-tuned model weights saved to: {MODEL_SAVE_DIR}")
+        # Validation
+        model.eval()
+        val_preds, val_labels = [], []
+        with torch.no_grad():
+            for batch in val_loader:
+                input_ids = batch["input_ids"].to(device)
+                attention_mask = batch["attention_mask"].to(device)
+                outputs = model(input_ids, attention_mask=attention_mask)
+                preds = torch.argmax(outputs.logits, dim=1).cpu().numpy()
+                val_preds.extend(preds)
+                val_labels.extend(batch["label"].numpy())
 
-# 5. Final Evaluation on Frozen Test Set
-print("\n[5/5] Final Evaluation on Frozen Held-Out Test Set...")
-model.eval()
-test_preds, test_labels = [], []
+        val_acc = accuracy_score(val_labels, val_preds)
+        val_macro_f1 = f1_score(val_labels, val_preds, average="macro", zero_division=0)
+        print(f"Epoch {epoch+1}/{epochs} | Train Loss: {avg_train_loss:.4f} | Val Acc: {val_acc*100:.2f}% | Val Macro-F1: {val_macro_f1*100:.2f}%")
 
-with torch.no_grad():
-    for batch in test_loader:
-        input_ids = batch["input_ids"].to(device)
-        attention_mask = batch["attention_mask"].to(device)
-        outputs = model(input_ids, attention_mask=attention_mask)
-        preds = torch.argmax(outputs.logits, dim=1).cpu().numpy()
-        test_preds.extend(preds)
-        test_labels.extend(batch["label"].numpy())
+        if val_macro_f1 > best_val_macro_f1:
+            best_val_macro_f1 = val_macro_f1
+            model.save_pretrained(MODEL_SAVE_DIR)
+            tokenizer.save_pretrained(MODEL_SAVE_DIR)
+            print(f"  --> Saved new best checkpoint to {MODEL_SAVE_DIR} (Val Macro-F1: {val_macro_f1:.4f})")
 
-test_acc = accuracy_score(test_labels, test_preds)
-macro_f1 = f1_score(test_labels, test_preds, average="macro", zero_division=0)
-prec = precision_score(test_labels, test_preds, average="macro", zero_division=0)
-rec = recall_score(test_labels, test_preds, average="macro", zero_division=0)
+    print("\n" + "=" * 80)
+    print(f"22-CATEGORY BIOBERT FINE-TUNING FINISHED. Best Validation Macro-F1: {best_val_macro_f1:.4f}")
+    print(f"Model saved to: {MODEL_SAVE_DIR}")
+    print("=" * 80)
 
-print("\n" + "-" * 70)
-print("  [>] TEST SET PERFORMANCE RESULTS:")
-print(f"    * Accuracy:   {test_acc * 100:.2f}%")
-print(f"    * Precision:  {prec * 100:.2f}%")
-print(f"    * Recall:     {rec * 100:.2f}%")
-print(f"    * Macro-F1:   {macro_f1 * 100:.2f}%")
-
-print("\n  Per-Class Performance Report:")
-report = classification_report(test_labels, test_preds, target_names=["Diabetes", "Cardiovascular Disease", "Vaccination"], zero_division=0)
-print(report)
-
-print("\n" + "=" * 80)
-print("STAGE 6 EXIT CRITERIA CHECK:")
-print(f" [{'OK' if macro_f1 >= 0.85 else 'WARN'}] Macro-F1 Target >= 0.85 (Achieved: {macro_f1:.4f})")
-print(" [OK] Model weights saved to models/biobert_disease_classifier/")
-print(" SUMMARY: Stage 6 Claim Extraction & Disease Classification Completed.")
-print("=" * 80)
+if __name__ == "__main__":
+    train_classifier()

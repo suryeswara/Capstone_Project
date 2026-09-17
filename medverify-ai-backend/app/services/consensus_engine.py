@@ -58,6 +58,24 @@ STANCE_VALUE_MAP = {
     "neutral": 0,
 }
 
+# Spec-mandated label mapping (§13): internal → TRUE/FALSE/MIXTURE/UNPROVEN
+INTERNAL_TO_SPEC_LABEL = {
+    "SUPPORTED": "TRUE",
+    "LIKELY_SUPPORTED": "TRUE",
+    "INCONCLUSIVE": "UNPROVEN",
+    "LIKELY_REFUTED": "FALSE",
+    "REFUTED": "FALSE",
+    "MIXTURE": "MIXTURE",
+}
+
+
+def map_to_spec_label(internal_verdict: str) -> str:
+    """Map an internal consensus verdict to a spec-mandated label (§13).
+
+    Returns one of: TRUE, FALSE, MIXTURE, UNPROVEN
+    """
+    return INTERNAL_TO_SPEC_LABEL.get(internal_verdict, "UNPROVEN")
+
 
 # ---------------------------------------------------------------------------
 # CERTAINTY LEVEL EXTRACTION (BioScope Hedge Cue Analysis)
@@ -245,34 +263,46 @@ class ConsensusEngine:
         Consensus = sum(R_i * stance_i) / sum(R_i)
         stance_i in {+1, -1, 0}
 
-        Returns dict with consensus score, verdict, raw counts, and confidence.
+        Includes Neutral Mass Guardrail:
+        If evidence is predominantly neutral (>= 70% neutral mass) and directional
+        evidence is sparse (<= 1 study per side), the verdict is calibrated to
+        INCONCLUSIVE rather than falsely leaning Supported or Refuted.
         """
         total_weight = 0.0
         weighted_stance_sum = 0.0
+        directional_weight = 0.0
+        neutral_weight = 0.0
         raw_counts = {"supporting": 0, "contradicting": 0, "neutral": 0}
 
         for item in evidence_list:
             r = item.get("reliability_score", 0.5)
+            p = item.get("applicability_score", 1.0)  # P_i ∈ [0, 1]
             s = item.get("stance_value", 0)
-            total_weight += r
-            weighted_stance_sum += (r * s)
+            
+            w = r * p
+            total_weight += w
+            weighted_stance_sum += (w * s)
 
             if s > 0:
                 raw_counts["supporting"] += 1
+                directional_weight += w
             elif s < 0:
                 raw_counts["contradicting"] += 1
+                directional_weight += w
             else:
                 raw_counts["neutral"] += 1
+                neutral_weight += w
 
-        if total_weight == 0:
+        if total_weight == 0 or directional_weight == 0:
             return {
                 "weighted_consensus": 0.0,
                 "credibility_score": 50.0,
                 "verdict": "INCONCLUSIVE",
                 "raw_counts": raw_counts,
-                "total_evidence": 0,
+                "total_evidence": sum(raw_counts.values()),
                 "total_reliability_weight": 0.0,
                 "status": "INSUFFICIENT_EVIDENCE",
+                "spec_label": "UNPROVEN",
             }
 
         # Consensus score in [-1.0, +1.0]
@@ -286,14 +316,65 @@ class ConsensusEngine:
         # Determine verdict
         verdict = self._map_verdict(consensus_score)
 
+        # -------------------------------------------------------------------
+        # Neutral Mass Guardrail (Stage 8 Enhancement)
+        # Avoid false polarization when evidence is ambiguous:
+        # 1. Neutral dominates (>= 70%) AND directional signals are split (both supp and contra >= 1)
+        # 2. Or directional coverage is negligible (< 15%) and consensus is near-zero (|score| < 0.15)
+        # -------------------------------------------------------------------
+        neutral_ratio = neutral_weight / total_weight if total_weight > 0 else 1.0
+        directional_coverage = directional_weight / total_weight if total_weight > 0 else 0.0
+
+        if neutral_ratio >= 0.70 and (raw_counts["supporting"] >= 1 and raw_counts["contradicting"] >= 1):
+            logger.info(
+                f"[ConsensusEngine] Neutral Mass Guard triggered (split signals): neutral_ratio={neutral_ratio:.2f}, "
+                f"supp={raw_counts['supporting']}, contra={raw_counts['contradicting']}. Overriding '{verdict}' -> 'INCONCLUSIVE'."
+            )
+            verdict = "INCONCLUSIVE"
+        elif directional_coverage < 0.15 and abs(consensus_score) < 0.15:
+            verdict = "INCONCLUSIVE"
+
+        # -------------------------------------------------------------------
+        # MIXTURE Detection (§13)
+        # When evidence is highly polarized (both supporting AND contradicting
+        # with significant weights), the verdict is MIXTURE rather than
+        # reflecting which side barely won.
+        # -------------------------------------------------------------------
+        supporting_weight = sum(
+            (item.get("reliability_score", 0.5) * item.get("applicability_score", 1.0))
+            for item in evidence_list if item.get("stance_value", 0) > 0
+        )
+        contradicting_weight = sum(
+            (item.get("reliability_score", 0.5) * item.get("applicability_score", 1.0))
+            for item in evidence_list if item.get("stance_value", 0) < 0
+        )
+        if total_weight > 0:
+            support_frac = supporting_weight / total_weight
+            contra_frac = contradicting_weight / total_weight
+            if (
+                support_frac >= 0.20
+                and contra_frac >= 0.20
+                and raw_counts["supporting"] >= 2
+                and raw_counts["contradicting"] >= 2
+            ):
+                logger.info(
+                    f"[ConsensusEngine] MIXTURE detected: support_frac={support_frac:.2f}, "
+                    f"contra_frac={contra_frac:.2f}. Overriding verdict '{verdict}' -> 'MIXTURE'."
+                )
+                verdict = "MIXTURE"
+
+        # Map to spec label (§13: TRUE/FALSE/MIXTURE/UNPROVEN)
+        spec_label = map_to_spec_label(verdict)
+
         return {
             "weighted_consensus": round(consensus_score, 4),
             "credibility_score": credibility_score,
             "verdict": verdict,
+            "spec_label": spec_label,
             "raw_counts": raw_counts,
             "total_evidence": sum(raw_counts.values()),
             "total_reliability_weight": round(total_weight, 4),
-            "status": "VERIFIED",
+            "status": "VERIFIED" if verdict != "INCONCLUSIVE" else "INSUFFICIENT_EVIDENCE",
         }
 
     def _map_verdict(self, consensus: float) -> str:

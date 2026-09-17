@@ -1,0 +1,69 @@
+# MedVerify AI — Label Mapping Configuration
+# Version-controlled mapping between internal reasoning states and final labels.
+#
+# The Master Instructions (§13) mandate: TRUE / FALSE / MIXTURE / UNPROVEN
+# Internal consensus states use a 5-level scale for nuanced reasoning.
+# This file defines the canonical mapping from internal → spec labels.
+version: "1.0.0"
+
+# Spec-mandated final verification labels (§13)
+spec_labels:
+  - "TRUE"
+  - "FALSE"
+  - "MIXTURE"
+  - "UNPROVEN"
+
+# Internal consensus engine reasoning states
+internal_states:
+  - "SUPPORTED"
+  - "LIKELY_SUPPORTED"
+  - "INCONCLUSIVE"
+  - "LIKELY_REFUTED"
+  - "REFUTED"
+
+# Mapping: internal → spec label
+# SUPPORTED and LIKELY_SUPPORTED both map to TRUE because the consensus
+# score already distinguishes strength; the final label collapses to 4 classes.
+internal_to_spec:
+  SUPPORTED: "TRUE"
+  LIKELY_SUPPORTED: "TRUE"
+  INCONCLUSIVE: "UNPROVEN"
+  LIKELY_REFUTED: "FALSE"
+  REFUTED: "FALSE"
+
+# Reverse mapping for evaluation (when comparing with PubHealth gold labels)
+pubhealth_to_spec:
+  true: "TRUE"
+  false: "FALSE"
+  mixture: "MIXTURE"
+  unproven: "UNPROVEN"
+
+# UI display labels (for frontend rendering)
+# The frontend uses friendlier display names but the research evaluation
+# always uses the spec labels above.
+spec_to_display:
+  TRUE: "Supported"
+  FALSE: "Contradicted"
+  MIXTURE: "Mixed"
+  UNPROVEN: "Insufficient Evidence"
+
+# Verdict threshold documentation (duplicated from experiments.yaml for reference)
+# The consensus engine computes C ∈ [-1.0, +1.0] and maps to internal states:
+verdict_thresholds:
+  SUPPORTED: 0.30        # C >= +0.30
+  LIKELY_SUPPORTED: 0.10  # +0.10 <= C < +0.30
+  INCONCLUSIVE: -0.10     # -0.10 <= C < +0.10
+  LIKELY_REFUTED: -0.30   # -0.30 <= C < -0.10
+  REFUTED: -1.01          # C < -0.30
+
+# MIXTURE detection rule:
+# When evidence is highly polarized (both supporting AND contradicting evidence
+# with significant weights), the verdict is MIXTURE regardless of consensus score.
+mixture_detection:
+  enabled: true
+  min_supporting_weight: 0.20   # Minimum fraction of total weight from supporting
+  min_contradicting_weight: 0.20 # Minimum fraction from contradicting
+  description: >
+    MIXTURE is assigned when the evidence base contains substantial
+    support AND substantial contradiction, indicating genuine scientific
+    disagreement or context-dependent truth.

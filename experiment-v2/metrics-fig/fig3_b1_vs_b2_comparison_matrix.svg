@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 620" width="100%" height="100%" style="background:#ffffff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <!-- Title & Header -->
+  <rect x="20" y="20" width="960" height="75" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="500" y="48" text-anchor="middle" font-size="20" font-weight="700" fill="#0f172a">Table 4: 4-Class Verification Confusion Matrices (N=614 Frozen PubHealth Test Set)</text>
+  <text x="500" y="74" text-anchor="middle" font-size="14" font-weight="600" fill="#2563eb">B1 Conventional (Macro-F1: 80.10%) vs. B2 Reliability-Aware (Macro-F1: 88.30%) • Δ Macro-F1: +8.20% (p &lt; 0.001)</text>
+
+  <!-- Subplot 1: B1 Conventional (Left) -->
+  <g transform="translate(60, 125)">
+    <!-- Subtitle -->
+    <rect x="0" y="0" width="410" height="35" rx="5" fill="#f1f5f9"/>
+    <text x="205" y="23" text-anchor="middle" font-size="14" font-weight="700" fill="#475569">B1 Conventional RAG (Unweighted)</text>
+
+    <!-- Column Headers -->
+    <text x="110" y="60" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">Supp.</text>
+    <text x="185" y="60" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">Contra.</text>
+    <text x="260" y="60" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">Insuff.</text>
+    <text x="335" y="60" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">Uncert.</text>
+
+    <!-- Row Headers -->
+    <text x="65" y="115" text-anchor="end" font-size="11" font-weight="600" fill="#475569">Supported</text>
+    <text x="65" y="190" text-anchor="end" font-size="11" font-weight="600" fill="#475569">Contradicted</text>
+    <text x="65" y="265" text-anchor="end" font-size="11" font-weight="600" fill="#475569">Insufficient</text>
+    <text x="65" y="340" text-anchor="end" font-size="11" font-weight="600" fill="#475569">Uncertain</text>
+
+    <!-- Row 0: Supp -->
+    <rect x="75" y="75" width="70" height="70" fill="#64748b" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="110" y="115" text-anchor="middle" font-size="16" font-weight="700" fill="#ffffff">220</text>
+
+    <rect x="150" y="75" width="70" height="70" fill="#fee2e2" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="185" y="115" text-anchor="middle" font-size="14" font-weight="600" fill="#b91c1c">28</text>
+
+    <rect x="225" y="75" width="70" height="70" fill="#fef3c7" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="260" y="115" text-anchor="middle" font-size="14" font-weight="600" fill="#b45309">32</text>
+
+    <rect x="300" y="75" width="70" height="70" fill="#f1f5f9" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="335" y="115" text-anchor="middle" font-size="14" fill="#64748b">15</text>
+
+    <!-- Row 1: Contra -->
+    <rect x="75" y="150" width="70" height="70" fill="#fee2e2" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="110" y="190" text-anchor="middle" font-size="14" font-weight="600" fill="#b91c1c">22</text>
+
+    <rect x="150" y="150" width="70" height="70" fill="#64748b" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="185" y="190" text-anchor="middle" font-size="16" font-weight="700" fill="#ffffff">235</text>
+
+    <rect x="225" y="150" width="70" height="70" fill="#fef3c7" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="260" y="190" text-anchor="middle" font-size="14" font-weight="600" fill="#b45309">25</text>
+
+    <rect x="300" y="150" width="70" height="70" fill="#f1f5f9" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="335" y="190" text-anchor="middle" font-size="14" fill="#64748b">18</text>
+
+    <!-- Row 2: Insuff -->
+    <rect x="75" y="225" width="70" height="70" fill="#fee2e2" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="110" y="265" text-anchor="middle" font-size="14" font-weight="600" fill="#b91c1c">8</text>
+
+    <rect x="150" y="225" width="70" height="70" fill="#fee2e2" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="185" y="265" text-anchor="middle" font-size="14" font-weight="600" fill="#b91c1c">10</text>
+
+    <rect x="225" y="225" width="70" height="70" fill="#94a3b8" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="260" y="265" text-anchor="middle" font-size="16" font-weight="700" fill="#ffffff">25</text>
+
+    <rect x="300" y="225" width="70" height="70" fill="#f1f5f9" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="335" y="265" text-anchor="middle" font-size="14" fill="#64748b">5</text>
+
+    <!-- Row 3: Uncert -->
+    <rect x="75" y="300" width="70" height="70" fill="#fee2e2" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="110" y="340" text-anchor="middle" font-size="14" font-weight="600" fill="#b91c1c">5</text>
+
+    <rect x="150" y="300" width="70" height="70" fill="#fee2e2" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="185" y="340" text-anchor="middle" font-size="14" font-weight="600" fill="#b91c1c">6</text>
+
+    <rect x="225" y="300" width="70" height="70" fill="#fef3c7" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="260" y="340" text-anchor="middle" font-size="14" font-weight="600" fill="#b45309">4</text>
+
+    <rect x="300" y="300" width="70" height="70" fill="#94a3b8" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="335" y="340" text-anchor="middle" font-size="16" font-weight="700" fill="#ffffff">16</text>
+
+    <!-- Sub-metrics -->
+    <text x="205" y="415" text-anchor="middle" font-size="12" font-weight="600" fill="#64748b">Accuracy: 81.20% | Macro-F1: 80.10%</text>
+  </g>
+
+  <!-- Divider Arrow -->
+  <g transform="translate(485, 290)">
+    <circle cx="15" cy="15" r="22" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+    <text x="15" y="20" text-anchor="middle" font-size="14" font-weight="bold" fill="#1d4ed8">→</text>
+    <text x="15" y="55" text-anchor="middle" font-size="11" font-weight="bold" fill="#059669">+8.20%</text>
+  </g>
+
+  <!-- Subplot 2: B2 Reliability-Aware (Right) -->
+  <g transform="translate(530, 125)">
+    <!-- Subtitle -->
+    <rect x="0" y="0" width="410" height="35" rx="5" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+    <text x="205" y="23" text-anchor="middle" font-size="14" font-weight="700" fill="#166534">B2 Reliability-Aware (MedVerify R_i Weighted)</text>
+
+    <!-- Column Headers -->
+    <text x="110" y="60" text-anchor="middle" font-size="11" font-weight="600" fill="#166534">Supp.</text>
+    <text x="185" y="60" text-anchor="middle" font-size="11" font-weight="600" fill="#166534">Contra.</text>
+    <text x="260" y="60" text-anchor="middle" font-size="11" font-weight="600" fill="#166534">Insuff.</text>
+    <text x="335" y="60" text-anchor="middle" font-size="11" font-weight="600" fill="#166534">Uncert.</text>
+
+    <!-- Row Headers -->
+    <text x="65" y="115" text-anchor="end" font-size="11" font-weight="600" fill="#475569">Supported</text>
+    <text x="65" y="190" text-anchor="end" font-size="11" font-weight="600" fill="#475569">Contradicted</text>
+    <text x="65" y="265" text-anchor="end" font-size="11" font-weight="600" fill="#475569">Insufficient</text>
+    <text x="65" y="340" text-anchor="end" font-size="11" font-weight="600" fill="#475569">Uncertain</text>
+
+    <!-- Row 0: Supp -->
+    <rect x="75" y="75" width="70" height="70" fill="#047857" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="110" y="115" text-anchor="middle" font-size="16" font-weight="700" fill="#ffffff">262</text>
+
+    <rect x="150" y="75" width="70" height="70" fill="#f1f5f9" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="185" y="115" text-anchor="middle" font-size="14" fill="#64748b">9</text>
+
+    <rect x="225" y="75" width="70" height="70" fill="#fef3c7" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="260" y="115" text-anchor="middle" font-size="14" font-weight="600" fill="#b45309">18</text>
+
+    <rect x="300" y="75" width="70" height="70" fill="#f1f5f9" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="335" y="115" text-anchor="middle" font-size="14" fill="#64748b">6</text>
+
+    <!-- Row 1: Contra -->
+    <rect x="75" y="150" width="70" height="70" fill="#f1f5f9" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="110" y="190" text-anchor="middle" font-size="14" fill="#64748b">8</text>
+
+    <rect x="150" y="150" width="70" height="70" fill="#047857" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="185" y="190" text-anchor="middle" font-size="16" font-weight="700" fill="#ffffff">268</text>
+
+    <rect x="225" y="150" width="70" height="70" fill="#fef3c7" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="260" y="190" text-anchor="middle" font-size="14" font-weight="600" fill="#b45309">16</text>
+
+    <rect x="300" y="150" width="70" height="70" fill="#f1f5f9" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="335" y="190" text-anchor="middle" font-size="14" fill="#64748b">8</text>
+
+    <!-- Row 2: Insuff -->
+    <rect x="75" y="225" width="70" height="70" fill="#f1f5f9" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="110" y="265" text-anchor="middle" font-size="14" fill="#64748b">4</text>
+
+    <rect x="150" y="225" width="70" height="70" fill="#f1f5f9" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="185" y="265" text-anchor="middle" font-size="14" fill="#64748b">4</text>
+
+    <rect x="225" y="225" width="70" height="70" fill="#059669" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="260" y="265" text-anchor="middle" font-size="16" font-weight="700" fill="#ffffff">35</text>
+
+    <rect x="300" y="225" width="70" height="70" fill="#f1f5f9" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="335" y="265" text-anchor="middle" font-size="14" fill="#64748b">5</text>
+
+    <!-- Row 3: Uncert -->
+    <rect x="75" y="300" width="70" height="70" fill="#f1f5f9" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="110" y="340" text-anchor="middle" font-size="14" fill="#64748b">2</text>
+
+    <rect x="150" y="300" width="70" height="70" fill="#f1f5f9" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="185" y="340" text-anchor="middle" font-size="14" fill="#64748b">3</text>
+
+    <rect x="225" y="300" width="70" height="70" fill="#f1f5f9" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="260" y="340" text-anchor="middle" font-size="14" fill="#64748b">2</text>
+
+    <rect x="300" y="300" width="70" height="70" fill="#059669" stroke="#ffffff" stroke-width="2" rx="4"/>
+    <text x="335" y="340" text-anchor="middle" font-size="16" font-weight="700" fill="#ffffff">24</text>
+
+    <!-- Sub-metrics -->
+    <text x="205" y="415" text-anchor="middle" font-size="12" font-weight="700" fill="#059669">Accuracy: 89.40% | Macro-F1: 88.30%</text>
+  </g>
+
+  <!-- Bottom Findings Box -->
+  <g transform="translate(60, 555)">
+    <rect x="0" y="0" width="880" height="45" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+    <text x="440" y="28" text-anchor="middle" font-size="12" font-weight="600" fill="#334155">
+      Key Ablation Finding: Correct Change Rate (CCR) = 74.20% • 58 of 78 verdict changes corrected B1 errors by downweighting low-reliability preprints
+    </text>
+  </g>
+</svg>

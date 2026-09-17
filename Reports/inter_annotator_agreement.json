@@ -1,0 +1,40 @@
+{
+  "experiment": "Inter_Annotator_Agreement",
+  "spec_section": "\u00a716",
+  "timestamp": "2026-09-15T16:49:37.103476Z",
+  "agreement_statistics": {
+    "population_gt_70": {
+      "sample_size": 70,
+      "cohens_kappa": 1.0,
+      "percentage_agreement": 100.0,
+      "annotation_label_distribution": {
+        "HIGH": 54,
+        "LOW": 14,
+        "PARTIAL": 2
+      },
+      "note": "Both annotator columns contain identical values, indicating single-annotator labeling. \u03ba=1.0 is expected. A second independent annotator is recommended to validate population labels."
+    },
+    "population_challenge": {
+      "sample_size": 140,
+      "status": "SINGLE_ANNOTATOR",
+      "note": "Second annotator labels not yet provided. \u03ba cannot be computed with a single annotator."
+    }
+  },
+  "methodology": {
+    "annotation_labels": [
+      "HIGH",
+      "PARTIAL",
+      "LOW",
+      "NOT_APPLICABLE"
+    ],
+    "agreement_metric": "Cohen's Kappa",
+    "kappa_interpretation": {
+      "0.81-1.00": "almost perfect",
+      "0.61-0.80": "substantial",
+      "0.41-0.60": "moderate",
+      "0.21-0.40": "fair",
+      "0.00-0.20": "slight",
+      "< 0.00": "poor"
+    }
+  }
+}

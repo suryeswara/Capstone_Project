@@ -1,0 +1,55 @@
+# MedVerify AI - Stage 0: Experimental Protocols & Baseline Matrix
+version: "1.0.0"
+
+random_seed: 42
+
+baselines:
+  B0:
+    name: "LLM Only"
+    description: "Claim directly to LLM without external retrieval"
+    retrieval: false
+    reliability_weighting: false
+    population_applicability: false
+    faithfulness_guard: false
+
+  B1:
+    name: "Conventional RAG"
+    description: "Standard top-k similarity retrieval without R_i or P_i"
+    retrieval: true
+    retrieval_ranking: "similarity_only"
+    reliability_weighting: false
+    population_applicability: false
+    faithfulness_guard: false
+
+  B2:
+    name: "Reliability-Aware RAG"
+    description: "Retrieval weighted by source and evidence reliability R_i"
+    retrieval: true
+    retrieval_ranking: "R_i_weighted"
+    reliability_weighting: true
+    population_applicability: false
+    faithfulness_guard: false
+
+  B3:
+    name: "Full MedVerify (Novelty Architecture)"
+    description: "BioBERT triage + Hybrid Retrieval + R_i x P_i + NLI Consensus + Grounded LLM + BioScope Faithfulness + Calibrated Confidence"
+    retrieval: true
+    retrieval_ranking: "W_i_weighted"
+    reliability_weighting: true
+    population_applicability: true
+    faithfulness_guard: true
+    calibration: true
+
+critical_gates:
+  gate_1_biobert_macro_f1: 0.85
+  gate_2_retrieval_ndcg10: 0.70
+  gate_3_population_sample_size: 70
+  gate_4_faithfulness_min_recall: 0.65
+  gate_4_faithfulness_stretch_recall: 0.90
+  gate_5_calibration_ece_max: 0.15
+
+verdict_thresholds:
+  true: 0.30        # Weighted consensus >= +0.30
+  false: -0.30       # Weighted consensus <= -0.30
+  mixture: 0.05      # High disagreement or intermediate consensus
+  unproven: 0.00     # Insufficient or neutral coverage

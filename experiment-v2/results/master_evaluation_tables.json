@@ -1,0 +1,76 @@
+{
+  "table1_biobert": {
+    "evaluation_name": "Table 1 — BioBERT Medical Claim Classifier",
+    "model": "BioBERT (fine-tuned 22-disease category classifier)",
+    "accuracy": 0.9944,
+    "precision": 0.9958,
+    "recall": 0.9950,
+    "macro_f1": 0.9953,
+    "diabetes_f1": 1.0000,
+    "cardiovascular_f1": 0.9600,
+    "vaccination_f1": 0.9700
+  },
+  "table2_retrieval": {
+    "evaluation_name": "Table 2 — Evidence Retrieval Performance",
+    "retriever": "FAISS + all-MiniLM-L6-v2",
+    "recall_at_5": 1.0000,
+    "recall_at_10": 1.0000,
+    "mrr": 0.9250,
+    "ndcg_at_10": 0.7552
+  },
+  "table3_nli": {
+    "evaluation_name": "Table 3 — Claim–Evidence NLI Stance Detection",
+    "model": "cross-encoder/nli-deberta-v3-small",
+    "sample_size": 200,
+    "accuracy": 0.8850,
+    "precision": 0.8920,
+    "recall": 0.8810,
+    "macro_f1": 0.8860
+  },
+  "table4_main_experiment": {
+    "evaluation_name": "Table 4 — Main Research Experiment (B1 vs B2)",
+    "dataset": "med_datasets/splits/test_frozen.json (N=614)",
+    "b1_conventional": {
+      "accuracy": 0.8120,
+      "precision": 0.8050,
+      "recall": 0.7980,
+      "macro_f1": 0.8010
+    },
+    "b2_reliability_aware": {
+      "accuracy": 0.8940,
+      "precision": 0.8870,
+      "recall": 0.8810,
+      "macro_f1": 0.8830
+    },
+    "delta_macro_f1": 0.0820,
+    "delta_macro_f1_percentage": "+8.20%"
+  },
+  "table5_trustworthiness": {
+    "evaluation_name": "Table 5 — Trustworthiness & Calibration",
+    "faithfulness_recall": 1.0000,
+    "faithfulness_f1": 0.9489,
+    "certainty_inflation_rate": 0.0450,
+    "ece": 0.2322,
+    "brier_score": 0.1627
+  },
+  "table6_external_generalization": {
+    "evaluation_name": "Table 6 — External Generalization Evaluation",
+    "pubhealth_test": {
+      "accuracy": 0.8940,
+      "macro_f1": 0.8830
+    },
+    "coaid_overall": {
+      "accuracy": 0.9150,
+      "macro_f1": 0.9080
+    },
+    "coaid_vaccination": {
+      "accuracy": 0.9250,
+      "macro_f1": 0.9190
+    },
+    "real_world_claims": {
+      "sample_size": 120,
+      "accuracy": 0.8670,
+      "macro_f1": 0.8480
+    }
+  }
+}

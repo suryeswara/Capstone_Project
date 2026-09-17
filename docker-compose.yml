@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database Server
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: medverify-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: medverify
+      POSTGRES_PASSWORD: medverify_secret
+      POSTGRES_DB: medverify_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # ---------------------------------------------------------------------------
+  # MedVerify AI FastAPI Backend Gateway & AI Pipeline
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./medverify-ai-backend
+      dockerfile: Dockerfile
+    container_name: medverify-backend
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      POSTGRES_USER: medverify
+      POSTGRES_PASSWORD: medverify_secret
+      POSTGRES_SERVER: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: medverify_db
+      JWT_SECRET_KEY: medverify-super-secret-jwt-key-2026-phase1
+      USE_SQLITE_FALLBACK: "false"
+      CONSENSUS_MODE: "population"
+    ports:
+      - "8000:8000"
+
+  # ---------------------------------------------------------------------------
+  # MedVerify AI React Frontend UI
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./medverify-ai-frontend
+      dockerfile: Dockerfile
+    container_name: medverify-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  postgres_data:

@@ -1,0 +1,985 @@
+{
+  "experiment_id": "full-baseline-20260915T192540",
+  "timestamp": "2026-09-15T19:25:40.605632Z",
+  "random_seed": 42,
+  "dataset": {
+    "path": "C:\\Users\\Surya\\Downloads\\Capstone_Project\\med_datasets\\splits\\test_frozen.json",
+    "total_items": 614,
+    "label_distribution": {
+      "TRUE": 355,
+      "MIXTURE": 96,
+      "FALSE": 154,
+      "UNPROVEN": 9
+    }
+  },
+  "configuration": {
+    "nli_model": "cross-encoder/nli-deberta-v3-small",
+    "evidence_per_claim": 5,
+    "evidence_mode": "faiss_vector_store_real",
+    "vector_store_path": "C:\\Users\\Surya\\Downloads\\Capstone_Project\\vector_store",
+    "labels": [
+      "TRUE",
+      "FALSE",
+      "MIXTURE",
+      "UNPROVEN"
+    ]
+  },
+  "baselines": {
+    "B_minus_1_Keyword": {
+      "accuracy": 0.0651,
+      "macro_f1": 0.0814,
+      "precision": 0.2542,
+      "recall": 0.2433,
+      "per_class_f1": {
+        "TRUE": 0.092,
+        "FALSE": 0.0127,
+        "MIXTURE": 0.194,
+        "UNPROVEN": 0.0267
+      },
+      "confusion_matrix": [
+        [
+          19,
+          2,
+          14,
+          320
+        ],
+        [
+          21,
+          1,
+          11,
+          121
+        ],
+        [
+          16,
+          0,
+          13,
+          67
+        ],
+        [
+          2,
+          0,
+          0,
+          7
+        ]
+      ],
+      "confusion_matrix_labels": [
+        "TRUE",
+        "FALSE",
+        "MIXTURE",
+        "UNPROVEN"
+      ],
+      "sample_size": 614
+    },
+    "B0_LLM_Only": {
+      "accuracy": 0.1124,
+      "macro_f1": 0.1247,
+      "precision": 0.2458,
+      "recall": 0.2318,
+      "per_class_f1": {
+        "TRUE": 0.0111,
+        "FALSE": 0.1717,
+        "MIXTURE": 0.2983,
+        "UNPROVEN": 0.0176
+      },
+      "confusion_matrix": [
+        [
+          2,
+          43,
+          92,
+          218
+        ],
+        [
+          2,
+          20,
+          58,
+          74
+        ],
+        [
+          0,
+          15,
+          44,
+          37
+        ],
+        [
+          0,
+          1,
+          5,
+          3
+        ]
+      ],
+      "confusion_matrix_labels": [
+        "TRUE",
+        "FALSE",
+        "MIXTURE",
+        "UNPROVEN"
+      ],
+      "sample_size": 614
+    },
+    "B1_Conventional_RAG": {
+      "accuracy": 0.2785,
+      "macro_f1": 0.2004,
+      "precision": 0.3045,
+      "recall": 0.3349,
+      "per_class_f1": {
+        "TRUE": 0.3537,
+        "FALSE": 0.3853,
+        "MIXTURE": 0.019,
+        "UNPROVEN": 0.0437
+      },
+      "confusion_matrix": [
+        [
+          81,
+          144,
+          8,
+          122
+        ],
+        [
+          13,
+          84,
+          0,
+          57
+        ],
+        [
+          7,
+          52,
+          1,
+          36
+        ],
+        [
+          2,
+          2,
+          0,
+          5
+        ]
+      ],
+      "confusion_matrix_labels": [
+        "TRUE",
+        "FALSE",
+        "MIXTURE",
+        "UNPROVEN"
+      ],
+      "sample_size": 614
+    },
+    "B2_Reliability_RAG": {
+      "accuracy": 0.2785,
+      "macro_f1": 0.2004,
+      "precision": 0.3045,
+      "recall": 0.3349,
+      "per_class_f1": {
+        "TRUE": 0.3537,
+        "FALSE": 0.3853,
+        "MIXTURE": 0.019,
+        "UNPROVEN": 0.0437
+      },
+      "confusion_matrix": [
+        [
+          81,
+          144,
+          8,
+          122
+        ],
+        [
+          13,
+          84,
+          0,
+          57
+        ],
+        [
+          7,
+          52,
+          1,
+          36
+        ],
+        [
+          2,
+          2,
+          0,
+          5
+        ]
+      ],
+      "confusion_matrix_labels": [
+        "TRUE",
+        "FALSE",
+        "MIXTURE",
+        "UNPROVEN"
+      ],
+      "sample_size": 614
+    },
+    "B3_Full_MedVerify": {
+      "accuracy": 0.2801,
+      "macro_f1": 0.2023,
+      "precision": 0.3045,
+      "recall": 0.3328,
+      "per_class_f1": {
+        "TRUE": 0.3672,
+        "FALSE": 0.3803,
+        "MIXTURE": 0.019,
+        "UNPROVEN": 0.0427
+      },
+      "confusion_matrix": [
+        [
+          85,
+          142,
+          8,
+          120
+        ],
+        [
+          13,
+          81,
+          0,
+          60
+        ],
+        [
+          7,
+          48,
+          1,
+          40
+        ],
+        [
+          3,
+          1,
+          0,
+          5
+        ]
+      ],
+      "confusion_matrix_labels": [
+        "TRUE",
+        "FALSE",
+        "MIXTURE",
+        "UNPROVEN"
+      ],
+      "sample_size": 614
+    }
+  },
+  "b2_vs_b3_comparison": {
+    "delta_accuracy_percent": 0.16,
+    "delta_macro_f1_percent": 0.19,
+    "mcnemar_test": {
+      "contingency_table": {
+        "both_correct": 162,
+        "a_correct_b_wrong": 9,
+        "b_correct_a_wrong": 10,
+        "both_wrong": 433
+      },
+      "chi2_statistic": 0.0,
+      "p_value": 1.0,
+      "statistically_significant": false
+    },
+    "b3_bootstrap_ci_95": {
+      "mean": 0.2019,
+      "lower": 0.1768,
+      "upper": 0.2284
+    }
+  },
+  "verdict_change_analysis": {
+    "total_claims": 614,
+    "verdict_changes": 27,
+    "correct_changes": 10,
+    "incorrect_changes": 17,
+    "VCR_percent": 4.4,
+    "CCR_percent": 37.04
+  },
+  "elapsed_seconds": 1612.33,
+  "detailed_results": [
+    {
+      "claim_id": "pubhealth-9421",
+      "disease_category": "Obesity & Weight Management",
+      "gold": "TRUE",
+      "b_minus_1": "TRUE",
+      "b0": "MIXTURE",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.2198,
+      "b3_consensus": -0.1515,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-7461",
+      "disease_category": "COVID-19",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "UNPROVEN",
+      "b2": "UNPROVEN",
+      "b3": "UNPROVEN",
+      "b2_consensus": 0.0,
+      "b3_consensus": 0.0,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-25793",
+      "disease_category": "COVID-19",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.5778,
+      "b3_consensus": -0.5778,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-997",
+      "disease_category": "Measles / MMR",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "MIXTURE",
+      "b1": "UNPROVEN",
+      "b2": "UNPROVEN",
+      "b3": "UNPROVEN",
+      "b2_consensus": 0.0,
+      "b3_consensus": 0.0,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-359",
+      "disease_category": "Diabetes",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "FALSE",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.2,
+      "b3_consensus": -0.2468,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-7306",
+      "disease_category": "Reproductive Health / Abortion",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "UNPROVEN",
+      "b2": "UNPROVEN",
+      "b3": "UNPROVEN",
+      "b2_consensus": 0.0,
+      "b3_consensus": 0.0,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-35880",
+      "disease_category": "COVID-19",
+      "gold": "MIXTURE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.7917,
+      "b3_consensus": -0.7917,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-11256",
+      "disease_category": "Depression",
+      "gold": "MIXTURE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "UNPROVEN",
+      "b2": "UNPROVEN",
+      "b3": "UNPROVEN",
+      "b2_consensus": 0.0,
+      "b3_consensus": 0.0,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "coaid-real_07-36",
+      "disease_category": "Vaccination",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "TRUE",
+      "b2": "TRUE",
+      "b3": "TRUE",
+      "b2_consensus": 0.1818,
+      "b3_consensus": 0.199,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-7660",
+      "disease_category": "COVID-19",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "UNPROVEN",
+      "b2": "UNPROVEN",
+      "b3": "UNPROVEN",
+      "b2_consensus": 0.0,
+      "b3_consensus": 0.0,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-16749",
+      "disease_category": "Ebola Virus",
+      "gold": "FALSE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.2083,
+      "b3_consensus": -0.1515,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "coaid-real_05-134",
+      "disease_category": "Vaccination",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "MIXTURE",
+      "b1": "UNPROVEN",
+      "b2": "UNPROVEN",
+      "b3": "UNPROVEN",
+      "b2_consensus": 0.0,
+      "b3_consensus": 0.0,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-7471",
+      "disease_category": "COVID-19",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "UNPROVEN",
+      "b2": "UNPROVEN",
+      "b3": "UNPROVEN",
+      "b2_consensus": 0.0,
+      "b3_consensus": 0.0,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-7948",
+      "disease_category": "COVID-19",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "TRUE",
+      "b2": "TRUE",
+      "b3": "UNPROVEN",
+      "b2_consensus": 0.1739,
+      "b3_consensus": 0.1455,
+      "b2_to_b3_changed": true,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "coaid-real_05-26",
+      "disease_category": "Vaccination",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "TRUE",
+      "b2": "TRUE",
+      "b3": "TRUE",
+      "b2_consensus": 0.2273,
+      "b3_consensus": 0.2273,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-7987",
+      "disease_category": "Diabetes",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "MIXTURE",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "UNPROVEN",
+      "b2_consensus": -0.2159,
+      "b3_consensus": -0.1265,
+      "b2_to_b3_changed": true,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "coaid-real_07-168",
+      "disease_category": "Vaccination",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "UNPROVEN",
+      "b2": "UNPROVEN",
+      "b3": "UNPROVEN",
+      "b2_consensus": 0.0,
+      "b3_consensus": 0.0,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-6735",
+      "disease_category": "Measles / MMR",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.4091,
+      "b3_consensus": -0.4091,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-10536",
+      "disease_category": "General Cancer",
+      "gold": "MIXTURE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "MIXTURE",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.2273,
+      "b3_consensus": -0.2273,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-11122",
+      "disease_category": "General Cancer",
+      "gold": "MIXTURE",
+      "b_minus_1": "TRUE",
+      "b0": "MIXTURE",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.1818,
+      "b3_consensus": -0.1818,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-9707",
+      "disease_category": "Heart Disease",
+      "gold": "MIXTURE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.1852,
+      "b3_consensus": -0.1852,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-2422",
+      "disease_category": "General Cancer",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "MIXTURE",
+      "b1": "UNPROVEN",
+      "b2": "UNPROVEN",
+      "b3": "UNPROVEN",
+      "b2_consensus": 0.0,
+      "b3_consensus": 0.0,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-2941",
+      "disease_category": "General Cancer",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "TRUE",
+      "b2": "TRUE",
+      "b3": "TRUE",
+      "b2_consensus": 0.1905,
+      "b3_consensus": 0.1905,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-35309",
+      "disease_category": "COVID-19",
+      "gold": "FALSE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.3913,
+      "b3_consensus": -0.5498,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-9362",
+      "disease_category": "Heart Disease",
+      "gold": "MIXTURE",
+      "b_minus_1": "TRUE",
+      "b0": "MIXTURE",
+      "b1": "UNPROVEN",
+      "b2": "UNPROVEN",
+      "b3": "UNPROVEN",
+      "b2_consensus": 0.0,
+      "b3_consensus": 0.0,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "coaid-real_05-108",
+      "disease_category": "Vaccination",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "UNPROVEN",
+      "b2": "UNPROVEN",
+      "b3": "UNPROVEN",
+      "b2_consensus": 0.0,
+      "b3_consensus": 0.0,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "coaid-real_05-62",
+      "disease_category": "Vaccination",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "MIXTURE",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.2083,
+      "b3_consensus": -0.2311,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-10210",
+      "disease_category": "Stroke",
+      "gold": "FALSE",
+      "b_minus_1": "MIXTURE",
+      "b0": "UNPROVEN",
+      "b1": "TRUE",
+      "b2": "TRUE",
+      "b3": "TRUE",
+      "b2_consensus": 0.3864,
+      "b3_consensus": 0.3864,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-35289",
+      "disease_category": "COVID-19",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.1739,
+      "b3_consensus": -0.1739,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-25644",
+      "disease_category": "COVID-19",
+      "gold": "FALSE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "MIXTURE",
+      "b1": "TRUE",
+      "b2": "TRUE",
+      "b3": "TRUE",
+      "b2_consensus": 0.1667,
+      "b3_consensus": 0.1667,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "coaid-fake_05-16",
+      "disease_category": "Vaccination",
+      "gold": "FALSE",
+      "b_minus_1": "TRUE",
+      "b0": "MIXTURE",
+      "b1": "UNPROVEN",
+      "b2": "UNPROVEN",
+      "b3": "UNPROVEN",
+      "b2_consensus": 0.0,
+      "b3_consensus": 0.0,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-1907",
+      "disease_category": "Obesity & Weight Management",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.5909,
+      "b3_consensus": -0.6466,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-11007",
+      "disease_category": "Breast Cancer",
+      "gold": "MIXTURE",
+      "b_minus_1": "MIXTURE",
+      "b0": "UNPROVEN",
+      "b1": "UNPROVEN",
+      "b2": "UNPROVEN",
+      "b3": "UNPROVEN",
+      "b2_consensus": 0.0,
+      "b3_consensus": 0.0,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-4251",
+      "disease_category": "General Cancer",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.1667,
+      "b3_consensus": -0.1667,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-10167",
+      "disease_category": "Smoking & Tobacco",
+      "gold": "MIXTURE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "FALSE",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.2,
+      "b3_consensus": -0.2,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-13717",
+      "disease_category": "Smoking & Tobacco",
+      "gold": "FALSE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "FALSE",
+      "b1": "UNPROVEN",
+      "b2": "UNPROVEN",
+      "b3": "UNPROVEN",
+      "b2_consensus": 0.0,
+      "b3_consensus": 0.0,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-34463",
+      "disease_category": "Breast Cancer",
+      "gold": "UNPROVEN",
+      "b_minus_1": "UNPROVEN",
+      "b0": "MIXTURE",
+      "b1": "TRUE",
+      "b2": "TRUE",
+      "b3": "TRUE",
+      "b2_consensus": 0.1818,
+      "b3_consensus": 0.2255,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-9689",
+      "disease_category": "General Cancer",
+      "gold": "FALSE",
+      "b_minus_1": "TRUE",
+      "b0": "FALSE",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.186,
+      "b3_consensus": -0.186,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "coaid-real_07-114",
+      "disease_category": "Vaccination",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "UNPROVEN",
+      "b2": "UNPROVEN",
+      "b3": "UNPROVEN",
+      "b2_consensus": 0.0,
+      "b3_consensus": 0.0,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-8101",
+      "disease_category": "COVID-19",
+      "gold": "TRUE",
+      "b_minus_1": "TRUE",
+      "b0": "UNPROVEN",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.4419,
+      "b3_consensus": -0.4294,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-8143",
+      "disease_category": "COVID-19",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.6522,
+      "b3_consensus": -0.7753,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-8127",
+      "disease_category": "COVID-19",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "FALSE",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "UNPROVEN",
+      "b2_consensus": -0.1739,
+      "b3_consensus": -0.0894,
+      "b2_to_b3_changed": true,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-2732",
+      "disease_category": "General Cancer",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "MIXTURE",
+      "b1": "UNPROVEN",
+      "b2": "UNPROVEN",
+      "b3": "UNPROVEN",
+      "b2_consensus": -0.0238,
+      "b3_consensus": -0.0238,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-10854",
+      "disease_category": "Diabetes",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "MIXTURE",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.2118,
+      "b3_consensus": -0.2118,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pmid-42542595",
+      "disease_category": "Diabetes",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "MIXTURE",
+      "b1": "UNPROVEN",
+      "b2": "UNPROVEN",
+      "b3": "UNPROVEN",
+      "b2_consensus": 0.0,
+      "b3_consensus": 0.0,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-8609",
+      "disease_category": "COVID-19",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "FALSE",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.2727,
+      "b3_consensus": -0.2047,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-12493",
+      "disease_category": "Reproductive Health / Abortion",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "TRUE",
+      "b2": "TRUE",
+      "b3": "TRUE",
+      "b2_consensus": 0.1905,
+      "b3_consensus": 0.1905,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-39791",
+      "disease_category": "Measles / MMR",
+      "gold": "MIXTURE",
+      "b_minus_1": "MIXTURE",
+      "b0": "UNPROVEN",
+      "b1": "FALSE",
+      "b2": "FALSE",
+      "b3": "FALSE",
+      "b2_consensus": -0.2083,
+      "b3_consensus": -0.2596,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-37892",
+      "disease_category": "COVID-19",
+      "gold": "TRUE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "MIXTURE",
+      "b1": "TRUE",
+      "b2": "TRUE",
+      "b3": "TRUE",
+      "b2_consensus": 0.2,
+      "b3_consensus": 0.2,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    },
+    {
+      "claim_id": "pubhealth-37855",
+      "disease_category": "COVID-19",
+      "gold": "FALSE",
+      "b_minus_1": "UNPROVEN",
+      "b0": "UNPROVEN",
+      "b1": "UNPROVEN",
+      "b2": "UNPROVEN",
+      "b3": "UNPROVEN",
+      "b2_consensus": 0.0,
+      "b3_consensus": 0.0,
+      "b2_to_b3_changed": false,
+      "retrieved_evidence_count": 5
+    }
+  ]
+}

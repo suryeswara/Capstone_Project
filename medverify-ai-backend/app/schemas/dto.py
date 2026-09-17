@@ -81,11 +81,12 @@ class ConsensusDTO(BaseModel):
     weightedConsensusScore: float
     totalReliabilityWeight: float
     rawCounts: Dict[str, int]
+    weightedDistribution: Optional[Dict[str, float]] = None
 
 class ExplanationSentenceDTO(BaseModel):
     sentenceId: str
     text: str
-    status: str  # 'verified', 'unsupported', 'contradiction'
+    status: str  # 'SUPPORTED', 'PARTIALLY_SUPPORTED', 'UNSUPPORTED', 'CERTAINTY_ESCALATION'
     nliConfidence: float
     certaintyLevel: int
     citedEvidenceIds: List[str]
@@ -96,8 +97,17 @@ class EvidenceItemDTO(BaseModel):
     sourceType: str
     authors: Optional[str] = None
     pubYear: Optional[int] = None
+    pmid: Optional[str] = None
     doi: Optional[str] = None
-    reliabilityScore: float
+    similarity: Optional[float] = 0.0
+    reliabilityScore: float                       # R_i
+    applicabilityScore: Optional[float] = 1.0     # P_i
+    finalWeight: Optional[float] = 0.5            # W_i = R_i * P_i
+    pAge: Optional[float] = 0.5                   # A_i
+    pSex: Optional[float] = 0.5                   # S_i
+    pCondition: Optional[float] = 0.5             # C_i
+    pRegion: Optional[float] = 0.5                # G_i
+    populationMatchType: Optional[str] = "UNKNOWN"
     stance: str
     abstractChunk: Optional[str] = None
     url: Optional[str] = None
@@ -111,8 +121,11 @@ class VerificationReportDTO(BaseModel):
     status: str
     completedAt: Optional[str] = None
     verdict: Optional[str] = None
+    systemConfidence: Optional[float] = None
     credibility: Optional[CredibilityBreakdownDTO] = None
     consensus: Optional[ConsensusDTO] = None
+    populationAnalysis: Optional[Dict[str, Any]] = None
     explanation: List[ExplanationSentenceDTO] = []
     evidence: List[EvidenceItemDTO] = []
     versionMetadata: Optional[VersionMetadataDTO] = None
+

@@ -1,0 +1,232 @@
+{
+  "benchmark": "MedVerify Hybrid Retrieval Clinical Query Benchmark",
+  "num_queries": 20,
+  "metrics": {
+    "recall_at_5": 1.0,
+    "recall_at_10": 1.0,
+    "mrr": 0.925,
+    "ndcg_at_10": 0.7552
+  },
+  "per_query_details": [
+    {
+      "query_id": "q-diab-01",
+      "disease_category": "Diabetes",
+      "query": "Does metformin reduce cardiovascular mortality and complications in type 2 diabetes?",
+      "results_count": 8,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "first_relevant_rank": 1,
+      "mrr": 1.0,
+      "ndcg_at_10": 0.7341
+    },
+    {
+      "query_id": "q-diab-02",
+      "disease_category": "Diabetes",
+      "query": "What is the efficacy of SGLT2 inhibitors like empagliflozin in diabetic kidney disease?",
+      "results_count": 5,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "first_relevant_rank": 1,
+      "mrr": 1.0,
+      "ndcg_at_10": 0.8529
+    },
+    {
+      "query_id": "q-diab-03",
+      "disease_category": "Diabetes",
+      "query": "Can ketogenic diet cure type 2 diabetes permanently without medication?",
+      "results_count": 5,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "first_relevant_rank": 2,
+      "mrr": 0.5,
+      "ndcg_at_10": 0.7328
+    },
+    {
+      "query_id": "q-diab-04",
+      "disease_category": "Diabetes",
+      "query": "How does GLP-1 receptor agonist semaglutide affect HbA1c and weight reduction in diabetes?",
+      "results_count": 8,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "first_relevant_rank": 1,
+      "mrr": 1.0,
+      "ndcg_at_10": 0.7431
+    },
+    {
+      "query_id": "q-diab-05",
+      "disease_category": "Diabetes",
+      "query": "Risk factors and symptoms of diabetic ketoacidosis in type 1 versus type 2 diabetes",
+      "results_count": 8,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "first_relevant_rank": 1,
+      "mrr": 1.0,
+      "ndcg_at_10": 0.7124
+    },
+    {
+      "query_id": "q-cvd-01",
+      "disease_category": "Cardiovascular Disease",
+      "query": "Do statins reduce the risk of recurrent myocardial infarction and stroke in coronary artery disease?",
+      "results_count": 9,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "first_relevant_rank": 1,
+      "mrr": 1.0,
+      "ndcg_at_10": 0.6408
+    },
+    {
+      "query_id": "q-cvd-02",
+      "disease_category": "Cardiovascular Disease",
+      "query": "Is daily low-dose aspirin recommended for primary prevention of cardiovascular events in healthy low-risk adults?",
+      "results_count": 5,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "first_relevant_rank": 1,
+      "mrr": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    {
+      "query_id": "q-cvd-03",
+      "disease_category": "Cardiovascular Disease",
+      "query": "What is the target blood pressure in patients with hypertension to reduce cardiovascular mortality?",
+      "results_count": 6,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "first_relevant_rank": 1,
+      "mrr": 1.0,
+      "ndcg_at_10": 0.9268
+    },
+    {
+      "query_id": "q-cvd-04",
+      "disease_category": "Cardiovascular Disease",
+      "query": "Effectiveness of ACE inhibitors versus ARBs in heart failure with reduced ejection fraction",
+      "results_count": 9,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "first_relevant_rank": 1,
+      "mrr": 1.0,
+      "ndcg_at_10": 0.5642
+    },
+    {
+      "query_id": "q-cvd-05",
+      "disease_category": "Cardiovascular Disease",
+      "query": "Does coronary artery calcium scoring improve cardiovascular risk stratification in asymptomatic patients?",
+      "results_count": 8,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "first_relevant_rank": 1,
+      "mrr": 1.0,
+      "ndcg_at_10": 0.677
+    },
+    {
+      "query_id": "q-vax-01",
+      "disease_category": "Vaccination",
+      "query": "Does the MMR vaccine cause autism or developmental regression in children?",
+      "results_count": 10,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "first_relevant_rank": 1,
+      "mrr": 1.0,
+      "ndcg_at_10": 0.8695
+    },
+    {
+      "query_id": "q-vax-02",
+      "disease_category": "Vaccination",
+      "query": "What is the real-world safety profile and myocarditis risk of mRNA COVID-19 vaccines in young males?",
+      "results_count": 7,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "first_relevant_rank": 1,
+      "mrr": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    {
+      "query_id": "q-vax-03",
+      "disease_category": "Vaccination",
+      "query": "How effective is maternal Tdap vaccination during pregnancy in preventing pertussis in infants?",
+      "results_count": 10,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "first_relevant_rank": 1,
+      "mrr": 1.0,
+      "ndcg_at_10": 0.6334
+    },
+    {
+      "query_id": "q-vax-04",
+      "disease_category": "Vaccination",
+      "query": "Does HPV vaccination reduce the long-term incidence of cervical intraepithelial neoplasia and cancer?",
+      "results_count": 10,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "first_relevant_rank": 1,
+      "mrr": 1.0,
+      "ndcg_at_10": 0.6891
+    },
+    {
+      "query_id": "q-vax-05",
+      "disease_category": "Vaccination",
+      "query": "Is annual influenza vaccination effective in reducing hospitalizations among elderly adults over 65?",
+      "results_count": 10,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "first_relevant_rank": 1,
+      "mrr": 1.0,
+      "ndcg_at_10": 0.6123
+    },
+    {
+      "query_id": "q-vax-06",
+      "disease_category": "Vaccination",
+      "query": "Can drinking hot water or spraying alcohol prevent coronavirus infection?",
+      "results_count": 10,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "first_relevant_rank": 1,
+      "mrr": 1.0,
+      "ndcg_at_10": 0.7896
+    },
+    {
+      "query_id": "q-vax-07",
+      "disease_category": "Vaccination",
+      "query": "Do flu shots cause the flu or weaken the human immune system?",
+      "results_count": 10,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "first_relevant_rank": 1,
+      "mrr": 1.0,
+      "ndcg_at_10": 0.983
+    },
+    {
+      "query_id": "q-diab-06",
+      "disease_category": "Diabetes",
+      "query": "Does cinnamon supplementation lower fasting blood glucose in type 2 diabetes?",
+      "results_count": 8,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "first_relevant_rank": 2,
+      "mrr": 0.5,
+      "ndcg_at_10": 0.6049
+    },
+    {
+      "query_id": "q-cvd-06",
+      "disease_category": "Cardiovascular Disease",
+      "query": "Are omega-3 fish oil supplements proven to reduce heart attacks in high-risk patients?",
+      "results_count": 8,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "first_relevant_rank": 1,
+      "mrr": 1.0,
+      "ndcg_at_10": 0.705
+    },
+    {
+      "query_id": "q-diab-07",
+      "disease_category": "Diabetes",
+      "query": "Continuous glucose monitoring versus self-monitoring blood glucose in diabetes management",
+      "results_count": 7,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "first_relevant_rank": 2,
+      "mrr": 0.5,
+      "ndcg_at_10": 0.6332
+    }
+  ]
+}

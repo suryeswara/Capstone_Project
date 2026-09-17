@@ -1,7 +1,8 @@
 import type { VerificationRecord, EvidenceItem, FaithfulnessSentence } from '@/types'
 
 const mkEvidence = (items: Omit<EvidenceItem, 'id'>[]): EvidenceItem[] =>
-  items.map((it, i) => ({ ...it, id: `ev-${i}-${it.doi.replace(/[^a-z0-9]/gi, '')}` }))
+  items.map((it, i) => ({ ...it, id: `ev-${i}-${(it.doi ?? '').replace(/[^a-z0-9]/gi, '')}` }))
+
 
 export const EXAMPLE_CLAIMS: { text: string; disease: string }[] = [
   { text: 'The seasonal flu vaccine can give you the flu.', disease: 'Vaccination' },

@@ -1,0 +1,508 @@
+{
+  "report": "B2 -> B3 Verdict Changes",
+  "timestamp": "2026-09-16T04:35:56.011518+00:00",
+  "summary": {
+    "task": "Task 5: Verdict Change Trace",
+    "total_changes": 11,
+    "improved": 3,
+    "degraded": 5,
+    "lateral": 3
+  },
+  "changes": [
+    {
+      "claim_id": "pubhealth-35872",
+      "claim_text": "In February 2020, U.S. President Donald Trump enforced a complete ban on travel from mainland China, a signature policy move that helped save many lives from the spread of COVID-19 in the U.S.",
+      "ground_truth": "MIXTURE",
+      "b2_verdict": "FALSE",
+      "b3_verdict": "UNPROVEN",
+      "b2_consensus": -0.1818,
+      "b3_consensus": -0.1482,
+      "population_mismatch_type": "partial_mismatch",
+      "avg_P_i": 0.6,
+      "change_type": "LATERAL",
+      "is_correct_change": false,
+      "evidence_details": [
+        {
+          "R_i": 0.9048,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.5,
+          "stance": "contradicting",
+          "pop_match": "UNKNOWN"
+        },
+        {
+          "R_i": 0.9048,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.5,
+          "stance": "neutral",
+          "pop_match": "UNKNOWN"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.5,
+          "stance": "neutral",
+          "pop_match": "UNKNOWN"
+        }
+      ]
+    },
+    {
+      "claim_id": "pubhealth-11327",
+      "claim_text": "Estrogen Patch in Newly Postmenopausal Women May Reduce Alzheimer\u2019s Risk",
+      "ground_truth": "MIXTURE",
+      "b2_verdict": "FALSE",
+      "b3_verdict": "UNPROVEN",
+      "b2_consensus": -0.2,
+      "b3_consensus": -0.129,
+      "population_mismatch_type": "population_compatible",
+      "avg_P_i": 0.775,
+      "change_type": "LATERAL",
+      "is_correct_change": false,
+      "evidence_details": [
+        {
+          "R_i": 0.9048,
+          "P_i": 0.875,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.8144,
+          "P_i": 0.875,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.875,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.8144,
+          "P_i": 0.5,
+          "stance": "contradicting",
+          "pop_match": "UNKNOWN"
+        },
+        {
+          "R_i": 0.8144,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        }
+      ]
+    },
+    {
+      "claim_id": "pubhealth-7995",
+      "claim_text": "No proof drug touted by Trump is effective against coronavirus: EU.",
+      "ground_truth": "TRUE",
+      "b2_verdict": "UNPROVEN",
+      "b3_verdict": "FALSE",
+      "b2_consensus": -0.0465,
+      "b3_consensus": -0.1157,
+      "population_mismatch_type": "partial_mismatch",
+      "avg_P_i": 0.7,
+      "change_type": "LATERAL",
+      "is_correct_change": false,
+      "evidence_details": [
+        {
+          "R_i": 0.7239,
+          "P_i": 0.5,
+          "stance": "supporting",
+          "pop_match": "UNKNOWN"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.9048,
+          "P_i": 0.75,
+          "stance": "contradicting",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.8144,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        }
+      ]
+    },
+    {
+      "claim_id": "pubhealth-26387",
+      "claim_text": "President Trump just announced that the \u2018biological\u2019 lab in Wuhan where the COVID-19 virus was created was \u2018funded\u2019 by President Barak (sp) Hussein Obama in 2015 to the tune of $3,800,000 American dollars!",
+      "ground_truth": "FALSE",
+      "b2_verdict": "FALSE",
+      "b3_verdict": "UNPROVEN",
+      "b2_consensus": -0.1818,
+      "b3_consensus": -0.129,
+      "population_mismatch_type": "partial_mismatch",
+      "avg_P_i": 0.7,
+      "change_type": "DEGRADED",
+      "is_correct_change": false,
+      "evidence_details": [
+        {
+          "R_i": 0.9048,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.5,
+          "stance": "contradicting",
+          "pop_match": "UNKNOWN"
+        },
+        {
+          "R_i": 0.9048,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        }
+      ]
+    },
+    {
+      "claim_id": "pubhealth-1699",
+      "claim_text": "Industry makes $7,000 for each tobacco death: health campaigners.",
+      "ground_truth": "TRUE",
+      "b2_verdict": "UNPROVEN",
+      "b3_verdict": "TRUE",
+      "b2_consensus": 0.0435,
+      "b3_consensus": 0.1077,
+      "population_mismatch_type": "partial_mismatch",
+      "avg_P_i": 0.7,
+      "change_type": "IMPROVED",
+      "is_correct_change": true,
+      "evidence_details": [
+        {
+          "R_i": 0.9048,
+          "P_i": 0.75,
+          "stance": "supporting",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.9048,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.9048,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.5,
+          "stance": "contradicting",
+          "pop_match": "UNKNOWN"
+        }
+      ]
+    },
+    {
+      "claim_id": "pubhealth-8357",
+      "claim_text": "U.S. health officials urge Americans to prepare for spread of coronavirus.",
+      "ground_truth": "TRUE",
+      "b2_verdict": "UNPROVEN",
+      "b3_verdict": "TRUE",
+      "b2_consensus": 0.0454,
+      "b3_consensus": 0.1129,
+      "population_mismatch_type": "partial_mismatch",
+      "avg_P_i": 0.7,
+      "change_type": "IMPROVED",
+      "is_correct_change": true,
+      "evidence_details": [
+        {
+          "R_i": 0.9048,
+          "P_i": 0.75,
+          "stance": "supporting",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.9048,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.5,
+          "stance": "contradicting",
+          "pop_match": "UNKNOWN"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        }
+      ]
+    },
+    {
+      "claim_id": "pubhealth-41320",
+      "claim_text": "Polysorbate 80 and 20 are in vaccines and cause cancer in animals and are linked to autoimmune issues and infertility.",
+      "ground_truth": "UNPROVEN",
+      "b2_verdict": "FALSE",
+      "b3_verdict": "UNPROVEN",
+      "b2_consensus": -0.186,
+      "b3_consensus": -0.1416,
+      "population_mismatch_type": "partial_mismatch",
+      "avg_P_i": 0.65,
+      "change_type": "IMPROVED",
+      "is_correct_change": true,
+      "evidence_details": [
+        {
+          "R_i": 0.7239,
+          "P_i": 0.5,
+          "stance": "contradicting",
+          "pop_match": "UNKNOWN"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.5,
+          "stance": "neutral",
+          "pop_match": "UNKNOWN"
+        },
+        {
+          "R_i": 0.8144,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.8144,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.8144,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        }
+      ]
+    },
+    {
+      "claim_id": "pubhealth-7009",
+      "claim_text": "Toledo clinic suspends surgical abortions during change.",
+      "ground_truth": "TRUE",
+      "b2_verdict": "TRUE",
+      "b3_verdict": "UNPROVEN",
+      "b2_consensus": 0.1364,
+      "b3_consensus": 0.0654,
+      "population_mismatch_type": "partial_mismatch",
+      "avg_P_i": 0.6,
+      "change_type": "DEGRADED",
+      "is_correct_change": false,
+      "evidence_details": [
+        {
+          "R_i": 0.7239,
+          "P_i": 0.5,
+          "stance": "supporting",
+          "pop_match": "UNKNOWN"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.5,
+          "stance": "supporting",
+          "pop_match": "UNKNOWN"
+        },
+        {
+          "R_i": 0.9048,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.9048,
+          "P_i": 0.625,
+          "stance": "contradicting",
+          "pop_match": "UNKNOWN"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.625,
+          "stance": "neutral",
+          "pop_match": "UNKNOWN"
+        }
+      ]
+    },
+    {
+      "claim_id": "pubhealth-8697",
+      "claim_text": "Schools, universities to stay shut as Italy coronavirus death toll rises.",
+      "ground_truth": "TRUE",
+      "b2_verdict": "TRUE",
+      "b3_verdict": "UNPROVEN",
+      "b2_consensus": 0.1905,
+      "b3_consensus": 0.1455,
+      "population_mismatch_type": "partial_mismatch",
+      "avg_P_i": 0.65,
+      "change_type": "DEGRADED",
+      "is_correct_change": false,
+      "evidence_details": [
+        {
+          "R_i": 0.7239,
+          "P_i": 0.5,
+          "stance": "supporting",
+          "pop_match": "UNKNOWN"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.5,
+          "stance": "neutral",
+          "pop_match": "UNKNOWN"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.9048,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        }
+      ]
+    },
+    {
+      "claim_id": "pubhealth-35334",
+      "claim_text": "The COVID-19 Testing, Reaching, And Contacting Everyone (TRACE) Act, or H.R. 6666, would authorize federally administered COVID-19 testing groups to enter American homes and force testing against residents' will, and then \"\"take\"\" those who test positive to quarantine sites.",
+      "ground_truth": "FALSE",
+      "b2_verdict": "FALSE",
+      "b3_verdict": "UNPROVEN",
+      "b2_consensus": -0.1818,
+      "b3_consensus": -0.129,
+      "population_mismatch_type": "partial_mismatch",
+      "avg_P_i": 0.7,
+      "change_type": "DEGRADED",
+      "is_correct_change": false,
+      "evidence_details": [
+        {
+          "R_i": 0.7239,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.9048,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.9048,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.5,
+          "stance": "contradicting",
+          "pop_match": "UNKNOWN"
+        }
+      ]
+    },
+    {
+      "claim_id": "pubhealth-8353",
+      "claim_text": "Unprecedented' mental health issues seen in Hong Kong amid virus fears.",
+      "ground_truth": "TRUE",
+      "b2_verdict": "TRUE",
+      "b3_verdict": "UNPROVEN",
+      "b2_consensus": 0.1818,
+      "b3_consensus": 0.1482,
+      "population_mismatch_type": "partial_mismatch",
+      "avg_P_i": 0.6,
+      "change_type": "DEGRADED",
+      "is_correct_change": false,
+      "evidence_details": [
+        {
+          "R_i": 0.7239,
+          "P_i": 0.5,
+          "stance": "supporting",
+          "pop_match": "UNKNOWN"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.5,
+          "stance": "neutral",
+          "pop_match": "UNKNOWN"
+        },
+        {
+          "R_i": 0.7239,
+          "P_i": 0.5,
+          "stance": "neutral",
+          "pop_match": "UNKNOWN"
+        },
+        {
+          "R_i": 0.9048,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        },
+        {
+          "R_i": 0.9048,
+          "P_i": 0.75,
+          "stance": "neutral",
+          "pop_match": "MATCHED"
+        }
+      ]
+    }
+  ]
+}

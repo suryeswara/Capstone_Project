@@ -1,0 +1,31 @@
+# MedVerify AI - Stage 0: Reliability Score R_i Configuration (Frozen Formula R1.0)
+version: "R1.0"
+
+formula:
+  definition: "R_i = S_i * E_i * T_i"
+  description: "S_i = Source Tier, E_i = Study Type Hierarchy, T_i = Recency Factor"
+
+source_tier_scores:
+  who_cdc_government_guideline: 1.00
+  systematic_review_meta_analysis: 0.95
+  peer_reviewed_rct: 0.90
+  observational_study: 0.75
+  review_narrative_evidence: 0.65
+  other_scientific_source: 0.50
+  unverified_online: 0.20
+
+evidence_type_scores:
+  meta_analysis: 1.00
+  systematic_review: 0.95
+  randomized_controlled_trial: 0.90
+  cohort_study: 0.80
+  case_control_study: 0.70
+  cross_sectional_study: 0.60
+  case_report: 0.40
+  expert_opinion: 0.50
+  unspecified: 0.50
+
+recency_decay:
+  lambda_decay: 0.05  # T_i = exp(-lambda * delta_t_years)
+  reference_year: 2026
+  max_decay_floor: 0.40  # Minimum recency multiplier

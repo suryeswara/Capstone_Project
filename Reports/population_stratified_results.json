@@ -1,0 +1,134 @@
+{
+  "report": "Population-Stratified B2 vs B3 Results",
+  "timestamp": "2026-09-16T04:35:56.013864+00:00",
+  "overall_B2": {
+    "accuracy": 0.2785,
+    "macro_f1": 0.2004,
+    "precision": 0.3045,
+    "recall": 0.3349,
+    "per_class_f1": {
+      "TRUE": 0.3537,
+      "FALSE": 0.3853,
+      "MIXTURE": 0.019,
+      "UNPROVEN": 0.0437
+    },
+    "confusion_matrix": [
+      [
+        81,
+        144,
+        8,
+        122
+      ],
+      [
+        13,
+        84,
+        0,
+        57
+      ],
+      [
+        7,
+        52,
+        1,
+        36
+      ],
+      [
+        2,
+        2,
+        0,
+        5
+      ]
+    ],
+    "confusion_matrix_labels": [
+      "TRUE",
+      "FALSE",
+      "MIXTURE",
+      "UNPROVEN"
+    ],
+    "sample_size": 614
+  },
+  "overall_B3": {
+    "accuracy": 0.2752,
+    "macro_f1": 0.2,
+    "precision": 0.3043,
+    "recall": 0.3587,
+    "per_class_f1": {
+      "TRUE": 0.3501,
+      "FALSE": 0.3796,
+      "MIXTURE": 0.019,
+      "UNPROVEN": 0.0513
+    },
+    "confusion_matrix": [
+      [
+        80,
+        145,
+        8,
+        122
+      ],
+      [
+        13,
+        82,
+        0,
+        59
+      ],
+      [
+        7,
+        50,
+        1,
+        38
+      ],
+      [
+        2,
+        1,
+        0,
+        6
+      ]
+    ],
+    "confusion_matrix_labels": [
+      "TRUE",
+      "FALSE",
+      "MIXTURE",
+      "UNPROVEN"
+    ],
+    "sample_size": 614
+  },
+  "stratified": {
+    "population_compatible": {
+      "count": 86,
+      "B2_accuracy": 0.3721,
+      "B3_accuracy": 0.3721,
+      "delta_accuracy": 0.0,
+      "B2_macro_f1": 0.266,
+      "B3_macro_f1": 0.2679,
+      "delta_macro_f1": 0.19,
+      "verdict_changes": 1,
+      "correct_changes": 0
+    },
+    "partial_mismatch": {
+      "count": 515,
+      "B2_accuracy": 0.2641,
+      "B3_accuracy": 0.2602,
+      "delta_accuracy": -0.39,
+      "B2_macro_f1": 0.1892,
+      "B3_macro_f1": 0.1882,
+      "delta_macro_f1": -0.1,
+      "verdict_changes": 10,
+      "correct_changes": 3
+    },
+    "clear_mismatch": {
+      "count": 13,
+      "B2_accuracy": 0.2308,
+      "B3_accuracy": 0.2308,
+      "delta_accuracy": 0.0,
+      "B2_macro_f1": 0.1364,
+      "B3_macro_f1": 0.1364,
+      "delta_macro_f1": 0.0,
+      "verdict_changes": 0,
+      "correct_changes": 0
+    }
+  },
+  "category_counts": {
+    "partial_mismatch": 515,
+    "population_compatible": 86,
+    "clear_mismatch": 13
+  }
+}

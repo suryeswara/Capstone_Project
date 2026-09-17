@@ -5,7 +5,7 @@ import io
 import requests
 import pandas as pd
 
-DATASETS_DIR = os.path.join(os.getcwd(), "datasets")
+DATASETS_DIR = os.path.join(os.getcwd(), "med_datasets")
 RAW_DIR = os.path.join(DATASETS_DIR, "raw")
 PROCESSED_DIR = os.path.join(DATASETS_DIR, "processed")
 

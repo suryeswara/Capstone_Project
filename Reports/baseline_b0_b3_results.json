@@ -1,0 +1,51 @@
+{
+  "experiment": "B0_B3_Baseline_Matrix_and_McNemar",
+  "sample_size": 70,
+  "baselines": {
+    "B0_LLM_Only": {
+      "accuracy": 0.15714285714285714,
+      "macro_f1": 0.11416561580496008,
+      "precision": 0.28402670775552136,
+      "recall": 0.3888888888888889
+    },
+    "B1_Conventional_RAG": {
+      "accuracy": 0.7714285714285715,
+      "macro_f1": 0.2903225806451613,
+      "precision": 0.2571428571428572,
+      "recall": 0.3333333333333333
+    },
+    "B2_Reliability_RAG": {
+      "accuracy": 0.7714285714285715,
+      "macro_f1": 0.2903225806451613,
+      "precision": 0.2571428571428572,
+      "recall": 0.3333333333333333
+    },
+    "B3_Additive": {
+      "accuracy": 0.8,
+      "macro_f1": 0.5,
+      "precision": 0.5,
+      "recall": 0.5
+    },
+    "B3_Multiplicative": {
+      "accuracy": 1.0,
+      "macro_f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0
+    }
+  },
+  "statistical_comparison_b2_vs_b3": {
+    "delta_accuracy_percent": 22.86,
+    "delta_macro_f1_percent": 70.97,
+    "verdict_change_rate_percent": 22.86,
+    "correct_change_rate_percent": 100.0,
+    "mcnemar_table": {
+      "a": 54,
+      "b": 16,
+      "c": 0,
+      "d": 0
+    },
+    "chi2_statistic": 14.0625,
+    "p_value": 0.00017683457040160785,
+    "statistically_significant": true
+  }
+}

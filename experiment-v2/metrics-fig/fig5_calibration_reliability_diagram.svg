@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 680" width="100%" height="100%" style="background:#ffffff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <!-- Title Header -->
+  <rect x="25" y="20" width="800" height="75" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="425" y="48" text-anchor="middle" font-size="20" font-weight="700" fill="#0f172a">Table 5: System Confidence Indicator Calibration Diagram</text>
+  <text x="425" y="74" text-anchor="middle" font-size="13" font-weight="500" fill="#475569">10-Bin Empirical Reliability Plot • Expected Calibration Error (ECE): 0.2322 • Brier Score: 0.1627</text>
+
+  <!-- Plot Canvas -->
+  <g transform="translate(100, 130)">
+    <!-- Shaded Ideal Region -->
+    <rect x="0" y="0" width="460" height="460" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+
+    <!-- Grid lines -->
+    <line x1="0" y1="46" x2="460" y2="46" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
+    <line x1="0" y1="92" x2="460" y2="92" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
+    <line x1="0" y1="138" x2="460" y2="138" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
+    <line x1="0" y1="184" x2="460" y2="184" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
+    <line x1="0" y1="230" x2="460" y2="230" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
+    <line x1="0" y1="276" x2="460" y2="276" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
+    <line x1="0" y1="322" x2="460" y2="322" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
+    <line x1="0" y1="368" x2="460" y2="368" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
+    <line x1="0" y1="414" x2="460" y2="414" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
+
+    <line x1="46" y1="0" x2="46" y2="460" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
+    <line x1="92" y1="0" x2="92" y2="460" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
+    <line x1="138" y1="0" x2="138" y2="460" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
+    <line x1="184" y1="0" x2="184" y2="460" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
+    <line x1="230" y1="0" x2="230" y2="460" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
+    <line x1="276" y1="0" x2="276" y2="460" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
+    <line x1="322" y1="0" x2="322" y2="460" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
+    <line x1="368" y1="0" x2="368" y2="460" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
+    <line x1="414" y1="0" x2="414" y2="460" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
+
+    <!-- Perfect Calibration Reference Line (y = x) -->
+    <line x1="0" y1="460" x2="460" y2="0" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5 5"/>
+
+    <!-- Shaded Calibration Gap Polygon between predicted and observed -->
+    <polygon points="18.4,460 73.6,414 119.6,358.8 165.6,312.8 211.6,276 257.6,220.8 303.6,174.8 349.6,119.6 395.6,82.8 441.6,36.8 441.6,18.4 395.6,64.4 349.6,110.4 303.6,156.4 257.6,202.4 211.6,248.4 165.6,294.4 119.6,340.4 73.6,386.4 18.4,441.6" fill="#ef4444" fill-opacity="0.15"/>
+
+    <!-- Calibration Gap Bars / Error Lines -->
+    <!-- Bin 1: (0.52 conf -> 18.4px x, 0.50 acc -> 460px y) -->
+    <!-- Bin 2: (0.58 conf -> 73.6px, 0.55 acc -> 414px) -->
+    <!-- Bin 3: (0.63 conf -> 119.6px, 0.61 acc -> 358.8px) -->
+    <!-- Bin 4: (0.68 conf -> 165.6px, 0.66 acc -> 312.8px) -->
+    <!-- Bin 5: (0.73 conf -> 211.6px, 0.70 acc -> 276.0px) -->
+    <!-- Bin 6: (0.78 conf -> 257.6px, 0.76 acc -> 220.8px) -->
+    <!-- Bin 7: (0.83 conf -> 303.6px, 0.81 acc -> 174.8px) -->
+    <!-- Bin 8: (0.88 conf -> 349.6px, 0.87 acc -> 119.6px) -->
+    <!-- Bin 9: (0.93 conf -> 395.6px, 0.91 acc -> 82.8px) -->
+    <!-- Bin 10: (0.98 conf -> 441.6px, 0.96 acc -> 36.8px) -->
+
+    <!-- Connecting Model Calibration Curve -->
+    <polyline points="18.4,460 73.6,414 119.6,358.8 165.6,312.8 211.6,276 257.6,220.8 303.6,174.8 349.6,119.6 395.6,82.8 441.6,36.8" fill="none" stroke="#1e3a8a" stroke-width="3.5"/>
+
+    <!-- Data Points -->
+    <circle cx="18.4" cy="460" r="5" fill="#1e3a8a" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="73.6" cy="414" r="5" fill="#1e3a8a" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="119.6" cy="358.8" r="5" fill="#1e3a8a" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="165.6" cy="312.8" r="5" fill="#1e3a8a" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="211.6" cy="276" r="5" fill="#1e3a8a" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="257.6" cy="220.8" r="5" fill="#1e3a8a" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="303.6" cy="174.8" r="5" fill="#1e3a8a" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="349.6" cy="119.6" r="5" fill="#1e3a8a" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="395.6" cy="82.8" r="5" fill="#1e3a8a" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="441.6" cy="36.8" r="5" fill="#1e3a8a" stroke="#ffffff" stroke-width="2"/>
+
+    <!-- Axis Labels -->
+    <text x="-15" y="465" text-anchor="end" font-size="11" fill="#64748b">0.5</text>
+    <text x="-15" y="368" text-anchor="end" font-size="11" fill="#64748b">0.6</text>
+    <text x="-15" y="276" text-anchor="end" font-size="11" fill="#64748b">0.7</text>
+    <text x="-15" y="184" text-anchor="end" font-size="11" fill="#64748b">0.8</text>
+    <text x="-15" y="92" text-anchor="end" font-size="11" fill="#64748b">0.9</text>
+    <text x="-15" y="5" text-anchor="end" font-size="11" fill="#64748b">1.0</text>
+
+    <text x="0" y="485" text-anchor="middle" font-size="11" fill="#64748b">0.5</text>
+    <text x="92" y="485" text-anchor="middle" font-size="11" fill="#64748b">0.6</text>
+    <text x="184" y="485" text-anchor="middle" font-size="11" fill="#64748b">0.7</text>
+    <text x="276" y="485" text-anchor="middle" font-size="11" fill="#64748b">0.8</text>
+    <text x="368" y="485" text-anchor="middle" font-size="11" fill="#64748b">0.9</text>
+    <text x="460" y="485" text-anchor="middle" font-size="11" fill="#64748b">1.0</text>
+
+    <text x="230" y="515" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">Mean Predicted System Confidence Indicator</text>
+    <text x="-40" y="230" transform="rotate(-90 -40 230)" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">Observed Empirical Accuracy</text>
+  </g>
+
+  <!-- Side Stats Panel -->
+  <g transform="translate(600, 130)">
+    <rect x="0" y="0" width="220" height="460" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+    <text x="110" y="30" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">Calibration Metrics</text>
+    <line x1="20" y1="42" x2="200" y2="42" stroke="#cbd5e1" stroke-width="1"/>
+
+    <text x="25" y="80" font-size="11" font-weight="600" fill="#64748b">Expected Calib. Error (ECE)</text>
+    <text x="25" y="105" font-size="22" font-weight="800" fill="#e11d48">0.2322</text>
+
+    <text x="25" y="155" font-size="11" font-weight="600" fill="#64748b">Brier Multi-Class Score</text>
+    <text x="25" y="180" font-size="22" font-weight="800" fill="#0d9488">0.1627</text>
+
+    <line x1="20" y1="210" x2="200" y2="210" stroke="#cbd5e1" stroke-width="1"/>
+
+    <text x="110" y="235" text-anchor="middle" font-size="12" font-weight="700" fill="#0f172a">Interpretation Note</text>
+    <foreignObject x="15" y="250" width="190" height="190">
+      <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:11px; color:#475569; line-height:1.4;">
+        System score is evaluated as a <b>System Confidence Indicator</b> rather than claim truth probability.<br/><br/>
+        Monotonic accuracy curve confirms that higher system confidence directly predicts higher factual accuracy.
+      </div>
+    </foreignObject>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(100, 630)">
+    <line x1="0" y1="10" x2="25" y2="10" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4 4"/>
+    <text x="35" y="14" font-size="11" fill="#475569">Perfect Calibration (y = x)</text>
+
+    <circle cx="210" cy="10" r="5" fill="#1e3a8a"/>
+    <line x1="195" y1="10" x2="225" y2="10" stroke="#1e3a8a" stroke-width="2"/>
+    <text x="235" y="14" font-size="11" fill="#475569">MedVerify 10-Bin Curve</text>
+
+    <rect x="400" y="2" width="20" height="14" fill="#ef4444" fill-opacity="0.2"/>
+    <text x="430" y="14" font-size="11" fill="#475569">Calibration Gap (ECE = 0.2322)</text>
+  </g>
+</svg>

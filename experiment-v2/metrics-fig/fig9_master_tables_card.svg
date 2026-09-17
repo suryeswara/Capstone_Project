@@ -1,0 +1,173 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 800" width="100%" height="100%" style="background:#ffffff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <!-- Title -->
+  <rect x="25" y="20" width="1050" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="550" y="48" text-anchor="middle" font-size="22" font-weight="700" fill="#0f172a">MedVerify AI: Master Evaluation Tables (1–6)</text>
+  <text x="550" y="72" text-anchor="middle" font-size="13" font-weight="500" fill="#475569">Consolidated Thesis Benchmark Results • Experiment-v2 Metrics Suite</text>
+
+  <!-- Card 1: Table 1 BioBERT (Top-Left) -->
+  <g transform="translate(25, 110)">
+    <rect x="0" y="0" width="330" height="210" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+    <path d="M0,8 Q0,0 8,0 L322,0 Q330,0 330,8 L330,36 L0,36 Z" fill="#eff6ff"/>
+    <text x="15" y="24" font-size="14" font-weight="700" fill="#1e40af">Table 1: BioBERT Medical Classifier</text>
+
+    <text x="15" y="60" font-size="12" fill="#475569">Accuracy</text>
+    <text x="315" y="60" text-anchor="end" font-size="12" font-weight="700" fill="#0f172a">99.44%</text>
+
+    <text x="15" y="85" font-size="12" fill="#475569">Precision / Recall</text>
+    <text x="315" y="85" text-anchor="end" font-size="12" font-weight="700" fill="#0f172a">99.58% / 99.50%</text>
+
+    <text x="15" y="110" font-size="12" font-weight="700" fill="#1e3a8a">Macro-F1 (Primary)</text>
+    <text x="315" y="110" text-anchor="end" font-size="13" font-weight="800" fill="#1e40af">99.53%</text>
+
+    <line x1="15" y1="125" x2="315" y2="125" stroke="#f1f5f9" stroke-width="1"/>
+
+    <text x="15" y="145" font-size="11" fill="#64748b">Diabetes F1</text>
+    <text x="315" y="145" text-anchor="end" font-size="11" font-weight="700" fill="#059669">100.00%</text>
+
+    <text x="15" y="168" font-size="11" fill="#64748b">Cardiovascular F1</text>
+    <text x="315" y="168" text-anchor="end" font-size="11" font-weight="700" fill="#059669">96.00%</text>
+
+    <text x="15" y="191" font-size="11" fill="#64748b">Vaccination F1</text>
+    <text x="315" y="191" text-anchor="end" font-size="11" font-weight="700" fill="#059669">97.00%</text>
+  </g>
+
+  <!-- Card 2: Table 2 Retrieval (Top-Middle) -->
+  <g transform="translate(385, 110)">
+    <rect x="0" y="0" width="330" height="210" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+    <path d="M0,8 Q0,0 8,0 L322,0 Q330,0 330,8 L330,36 L0,36 Z" fill="#f0fdfa"/>
+    <text x="15" y="24" font-size="14" font-weight="700" fill="#0f766e">Table 2: Evidence Retrieval (FAISS)</text>
+
+    <text x="15" y="60" font-size="12" fill="#475569">Retriever Model</text>
+    <text x="315" y="60" text-anchor="end" font-size="12" font-weight="700" fill="#0f172a">FAISS + MiniLM</text>
+
+    <text x="15" y="90" font-size="12" fill="#475569">Recall@5</text>
+    <text x="315" y="90" text-anchor="end" font-size="13" font-weight="700" fill="#0d9488">1.0000</text>
+
+    <text x="15" y="120" font-size="12" fill="#475569">Recall@10</text>
+    <text x="315" y="120" text-anchor="end" font-size="13" font-weight="700" fill="#0d9488">1.0000</text>
+
+    <text x="15" y="150" font-size="12" fill="#475569">MRR (Mean Reciprocal Rank)</text>
+    <text x="315" y="150" text-anchor="end" font-size="13" font-weight="700" fill="#0d9488">0.9250</text>
+
+    <line x1="15" y1="168" x2="315" y2="168" stroke="#f1f5f9" stroke-width="1"/>
+
+    <text x="15" y="192" font-size="12" font-weight="700" fill="#0f766e">nDCG@10 (Main)</text>
+    <text x="315" y="192" text-anchor="end" font-size="15" font-weight="800" fill="#0f766e">0.7552</text>
+  </g>
+
+  <!-- Card 3: Table 3 NLI Stance (Top-Right) -->
+  <g transform="translate(745, 110)">
+    <rect x="0" y="0" width="330" height="210" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+    <path d="M0,8 Q0,0 8,0 L322,0 Q330,0 330,8 L330,36 L0,36 Z" fill="#faf5ff"/>
+    <text x="15" y="24" font-size="14" font-weight="700" fill="#7e22ce">Table 3: Claim–Evidence NLI Stance</text>
+
+    <text x="15" y="60" font-size="12" fill="#475569">Model</text>
+    <text x="315" y="60" text-anchor="end" font-size="11" font-weight="700" fill="#0f172a">nli-deberta-v3-small</text>
+
+    <text x="15" y="90" font-size="12" fill="#475569">Accuracy</text>
+    <text x="315" y="90" text-anchor="end" font-size="13" font-weight="700" fill="#0f172a">88.50%</text>
+
+    <text x="15" y="120" font-size="12" fill="#475569">Macro-Precision</text>
+    <text x="315" y="120" text-anchor="end" font-size="13" font-weight="700" fill="#0f172a">89.20%</text>
+
+    <text x="15" y="150" font-size="12" fill="#475569">Macro-Recall</text>
+    <text x="315" y="150" text-anchor="end" font-size="13" font-weight="700" fill="#0f172a">88.10%</text>
+
+    <line x1="15" y1="168" x2="315" y2="168" stroke="#f1f5f9" stroke-width="1"/>
+
+    <text x="15" y="192" font-size="12" font-weight="700" fill="#7e22ce">Macro-F1 (Primary)</text>
+    <text x="315" y="192" text-anchor="end" font-size="15" font-weight="800" fill="#7e22ce">88.60%</text>
+  </g>
+
+  <!-- Card 4: Table 4 Main Research Experiment (Bottom-Left - Wide) -->
+  <g transform="translate(25, 345)">
+    <rect x="0" y="0" width="510" height="225" rx="8" fill="#ffffff" stroke="#3b82f6" stroke-width="2"/>
+    <path d="M0,8 Q0,0 8,0 L502,0 Q510,0 510,8 L510,36 L0,36 Z" fill="#eff6ff"/>
+    <text x="15" y="24" font-size="14" font-weight="700" fill="#1e40af">Table 4: Main Research Experiment (B1 Conventional vs B2 Reliability-Aware)</text>
+
+    <!-- Table Columns -->
+    <text x="15" y="65" font-size="11" font-weight="700" fill="#475569">System</text>
+    <text x="180" y="65" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">Accuracy</text>
+    <text x="270" y="65" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">Precision</text>
+    <text x="360" y="65" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">Recall</text>
+    <text x="455" y="65" text-anchor="middle" font-size="11" font-weight="800" fill="#1e40af">Macro-F1</text>
+    <line x1="15" y1="75" x2="495" y2="75" stroke="#e2e8f0" stroke-width="1"/>
+
+    <!-- Row 1: B1 -->
+    <text x="15" y="100" font-size="12" fill="#64748b">B1 Conventional</text>
+    <text x="180" y="100" text-anchor="middle" font-size="12" fill="#64748b">81.20%</text>
+    <text x="270" y="100" text-anchor="middle" font-size="12" fill="#64748b">80.50%</text>
+    <text x="360" y="100" text-anchor="middle" font-size="12" fill="#64748b">79.80%</text>
+    <text x="455" y="100" text-anchor="middle" font-size="13" font-weight="600" fill="#475569">80.10%</text>
+
+    <!-- Row 2: B2 -->
+    <text x="15" y="130" font-size="12" font-weight="700" fill="#047857">B2 Reliability-Aware</text>
+    <text x="180" y="130" text-anchor="middle" font-size="12" font-weight="700" fill="#047857">89.40%</text>
+    <text x="270" y="130" text-anchor="middle" font-size="12" font-weight="700" fill="#047857">88.70%</text>
+    <text x="360" y="130" text-anchor="middle" font-size="12" font-weight="700" fill="#047857">88.10%</text>
+    <text x="455" y="130" text-anchor="middle" font-size="14" font-weight="800" fill="#047857">88.30%</text>
+    <line x1="15" y1="145" x2="495" y2="145" stroke="#e2e8f0" stroke-width="1"/>
+
+    <!-- Delta Highlight Row -->
+    <rect x="15" y="155" width="480" height="55" rx="6" fill="#fff1f2" stroke="#fecdd3" stroke-width="1"/>
+    <text x="30" y="178" font-size="12" font-weight="700" fill="#be123c">Primary Result: Δ Macro-F1 = +8.20% (p = 1.51e-6, McNemar)</text>
+    <text x="30" y="198" font-size="11" fill="#475569">Bootstrap 95% CI: [+5.40%, +11.10%] • Correct Change Rate (CCR): 74.20%</text>
+  </g>
+
+  <!-- Card 5: Table 5 Trustworthiness & Calibration (Bottom-Right) -->
+  <g transform="translate(565, 345)">
+    <rect x="0" y="0" width="510" height="225" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+    <path d="M0,8 Q0,0 8,0 L502,0 Q510,0 510,8 L510,36 L0,36 Z" fill="#f0fdf4"/>
+    <text x="15" y="24" font-size="14" font-weight="700" fill="#166534">Table 5: Trustworthiness, Grounding &amp; Calibration</text>
+
+    <text x="25" y="70" font-size="12" fill="#475569">Faithfulness Recall (Main Target ≥ 90%)</text>
+    <text x="485" y="70" text-anchor="end" font-size="14" font-weight="800" fill="#059669">100.00% [PASS]</text>
+
+    <text x="25" y="100" font-size="12" fill="#475569">Faithfulness F1 Score</text>
+    <text x="485" y="100" text-anchor="end" font-size="13" font-weight="700" fill="#0f172a">94.89%</text>
+
+    <text x="25" y="130" font-size="12" fill="#475569">Residual Certainty Inflation Rate (CIR ≤ 10%)</text>
+    <text x="485" y="130" text-anchor="end" font-size="13" font-weight="700" fill="#059669">4.50% [PASS]</text>
+
+    <line x1="25" y1="145" x2="485" y2="145" stroke="#f1f5f9" stroke-width="1"/>
+
+    <text x="25" y="175" font-size="12" fill="#475569">ECE (Expected Calibration Error)</text>
+    <text x="485" y="175" text-anchor="end" font-size="13" font-weight="700" fill="#0284c7">0.2322</text>
+
+    <text x="25" y="205" font-size="12" fill="#475569">Brier Score (Confidence vs. Correctness)</text>
+    <text x="485" y="205" text-anchor="end" font-size="13" font-weight="700" fill="#0284c7">0.1627</text>
+  </g>
+
+  <!-- Card 6: Table 6 External Generalization (Footer Span) -->
+  <g transform="translate(25, 595)">
+    <rect x="0" y="0" width="1050" height="175" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+    <path d="M0,8 Q0,0 8,0 L1042,0 Q1050,0 1050,8 L1050,36 L0,36 Z" fill="#f8fafc"/>
+    <text x="20" y="24" font-size="14" font-weight="700" fill="#0f172a">Table 6: External Generalization Performance (Cross-Dataset Evaluation)</text>
+
+    <g transform="translate(30, 50)">
+      <!-- Box 1 -->
+      <rect x="0" y="15" width="220" height="85" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="110" y="38" text-anchor="middle" font-size="12" font-weight="600" fill="#475569">PubHealth Test (N=614)</text>
+      <text x="110" y="65" text-anchor="middle" font-size="18" font-weight="800" fill="#1e3a8a">89.4% / 88.3%</text>
+      <text x="110" y="85" text-anchor="middle" font-size="10" fill="#64748b">Accuracy / Macro-F1</text>
+
+      <!-- Box 2 -->
+      <rect x="255" y="15" width="220" height="85" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="365" y="38" text-anchor="middle" font-size="12" font-weight="600" fill="#475569">CoAID Misinformation</text>
+      <text x="365" y="65" text-anchor="middle" font-size="18" font-weight="800" fill="#0d9488">91.5% / 90.8%</text>
+      <text x="365" y="85" text-anchor="middle" font-size="10" fill="#64748b">Accuracy / Macro-F1</text>
+
+      <!-- Box 3 -->
+      <rect x="510" y="15" width="220" height="85" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="620" y="38" text-anchor="middle" font-size="12" font-weight="600" fill="#475569">CoAID Vaccination Subset</text>
+      <text x="620" y="65" text-anchor="middle" font-size="18" font-weight="800" fill="#059669">92.5% / 91.9%</text>
+      <text x="620" y="85" text-anchor="middle" font-size="10" fill="#64748b">Accuracy / Macro-F1</text>
+
+      <!-- Box 4 -->
+      <rect x="765" y="15" width="220" height="85" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="875" y="38" text-anchor="middle" font-size="12" font-weight="600" fill="#475569">Real-World Claims (N=120)</text>
+      <text x="875" y="65" text-anchor="middle" font-size="18" font-weight="800" fill="#7e22ce">86.7% / 84.8%</text>
+      <text x="875" y="85" text-anchor="middle" font-size="10" fill="#64748b">Accuracy / Macro-F1</text>
+    </g>
+  </g>
+</svg>
