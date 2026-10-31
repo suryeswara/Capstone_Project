@@ -16,6 +16,7 @@ class VerificationStatusEnum(str, enum.Enum):
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
     REFUSED_SAFETY = "REFUSED_SAFETY"
+    REJECTED_NON_MEDICAL = "REJECTED_NON_MEDICAL"  # medical-claim gate said no
 
 class VerdictEnum(str, enum.Enum):
     SUPPORTED = "Supported"
@@ -77,6 +78,14 @@ class VerificationModel(Base):
     explanation_json = Column(JSON, nullable=True)
     version_metadata = Column(JSON, nullable=True)
 
+    # --- new pipeline (gate -> retrieval -> rerank -> classify -> meta -> explain) ---
+    mode = Column(String(10), nullable=True)               # requested: static | live | hybrid
+    mode_effective = Column(String(10), nullable=True)     # after any fallback to static
+    probabilities = Column(JSON, nullable=True)            # {"SUPPORT":..,"CONTRADICT":..,"NEI":..}
+    needs_review = Column(Boolean, nullable=True)          # confidence below the abstain threshold
+    gate_result = Column(JSON, nullable=True)
+    pipeline_trace = Column(JSON, nullable=True)           # notes, feature lengths, timings, suggestions, strength
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)
@@ -105,6 +114,9 @@ class EvidenceCitationModel(Base):
     p_region = Column(Float, default=0.5)
     population_match_type = Column(String(50), default="UNKNOWN")
     stance = Column(String(20), nullable=False)  # 'supporting', 'contradicting', 'neutral'
+    # new pipeline: reliability_score now holds the MonoT5 relevance (kept NOT NULL for compatibility)
+    pool = Column(String(10), nullable=True)               # fc | abs | live
+    stance_probs = Column(JSON, nullable=True)             # pair-classifier probs per class
     abstract_chunk = Column(Text, nullable=True)
     url = Column(String(500), nullable=True)
 

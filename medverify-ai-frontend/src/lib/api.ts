@@ -1,4 +1,4 @@
-import type { VerificationRecord, PipelineStage } from '@/types'
+import type { VerificationRecord, VerificationMode, PipelineStage } from '@/types'
 
 const API_BASE = 'http://localhost:8000/api'
 
@@ -84,7 +84,7 @@ export async function fetchUserHistoryApi(token: string): Promise<VerificationRe
     })
   )
   
-  return reports.filter(Boolean) as VerificationRecord[]
+  return (reports.filter(Boolean) as VerificationRecord[]).filter((r) => r.status === 'COMPLETED')
 }
 
 // ---------------------------------------------------------------------------
@@ -110,7 +110,7 @@ export interface VerificationStatusResponse {
   isTerminal: boolean
 }
 
-export async function submitClaimApi(rawText: string, token?: string): Promise<SubmitClaimResponse> {
+export async function submitClaimApi(rawText: string, mode: VerificationMode = 'static', token?: string): Promise<SubmitClaimResponse> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
@@ -119,15 +119,16 @@ export async function submitClaimApi(rawText: string, token?: string): Promise<S
   const res = await fetch(`${API_BASE}/claims`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ rawText })
+    body: JSON.stringify({ rawText, mode })
   })
   if (!res.ok) {
-    throw new Error(`Failed to submit claim: ${res.statusText}`)
+    const err = await res.json().catch(() => ({}))
+    throw new Error(typeof err.detail === 'string' ? err.detail : `Failed to submit claim: ${res.statusText}`)
   }
   return res.json()
 }
 
-export async function submitClaimImageApi(file: File, token?: string): Promise<SubmitClaimResponse> {
+export async function submitClaimImageApi(file: File, mode: VerificationMode = 'static', token?: string): Promise<SubmitClaimResponse> {
   const headers: Record<string, string> = {}
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
@@ -135,6 +136,7 @@ export async function submitClaimImageApi(file: File, token?: string): Promise<S
 
   const formData = new FormData()
   formData.append('file', file)
+  formData.append('mode', mode)
 
   const res = await fetch(`${API_BASE}/claims/image`, {
     method: 'POST',
@@ -142,7 +144,8 @@ export async function submitClaimImageApi(file: File, token?: string): Promise<S
     body: formData
   })
   if (!res.ok) {
-    throw new Error(`Failed to upload claim image: ${res.statusText}`)
+    const err = await res.json().catch(() => ({}))
+    throw new Error(typeof err.detail === 'string' ? err.detail : `Failed to upload claim image: ${res.statusText}`)
   }
   return res.json()
 }
@@ -162,45 +165,67 @@ export async function fetchReportApi(verificationId: string): Promise<Verificati
     throw new Error(`Failed to fetch report: ${res.statusText}`)
   }
   const data = await res.json()
-  
+
+  const evidence = (data.evidence || []).map((e: any) => ({
+    id: e.id,
+    title: e.title,
+    source: e.sourceType,
+    authors: e.authors || undefined,
+    year: e.pubYear ?? undefined,
+    pubYear: e.pubYear ?? undefined,
+    doi: e.doi || undefined,
+    pmid: e.pmid || undefined,
+    pool: e.pool || undefined,
+    similarity: e.similarity ?? undefined,
+    relevanceScore: e.relevanceScore ?? 0,
+    reliabilityScore: Math.round((e.relevanceScore ?? 0) * 100),
+    stance: e.stance || 'neutral',
+    stanceProbs: e.stanceProbs || undefined,
+    abstract: e.abstractChunk || undefined,
+    url: e.url || undefined,
+  }))
+
+  // Real per-year stance counts from the retrieved evidence (no placeholder data).
+  const byYear = new Map<number, { year: number; supporting: number; contradicting: number; neutral: number }>()
+  for (const e of evidence) {
+    if (!e.year) continue
+    const row = byYear.get(e.year) ?? { year: e.year, supporting: 0, contradicting: 0, neutral: 0 }
+    row[e.stance as 'supporting' | 'contradicting' | 'neutral'] += 1
+    byYear.set(e.year, row)
+  }
+
+  const summary = data.explanationSummary
   return {
     id: data.verificationId,
     claim: data.rawText,
-    disease: data.diseaseCategory || 'Diabetes',
+    disease: 'General Medicine',
     submittedAt: data.completedAt || new Date().toISOString(),
-    verdict: data.verdict || 'Supported',
-    credibility: data.credibility || {
-      overall: 88,
-      evidenceConfidence: 90,
-      consensusConfidence: 90,
-      sourceQuality: 85,
-      faithfulnessConfidence: 95
-    },
-    evidence: (data.evidence || []).map((e: any) => ({
-      id: e.id,
-      title: e.title,
-      source: e.sourceType,
-      authors: e.authors || 'Medical Research Team',
-      year: e.pubYear || 2024,
-      doi: e.doi || '10.1016/j.medverify',
-      reliabilityScore: Math.round((e.reliabilityScore || 0.9) * 100),
-      stance: e.stance || 'supporting',
-      abstract: e.abstractChunk || 'Clinical trial evidence...',
-      url: e.url || 'https://pubmed.ncbi.nlm.nih.gov/'
-    })),
-    consensusTimeline: [
-      { year: 2020, supporting: 2, contradicting: 0, neutral: 1 },
-      { year: 2022, supporting: 4, contradicting: 0, neutral: 0 },
-      { year: 2024, supporting: 6, contradicting: 0, neutral: 1 }
-    ],
+    verdict: data.verdict || 'Insufficient Evidence',
+    systemConfidence: data.systemConfidence ?? undefined,
+    credibility: data.credibility || { overall: 0, evidenceConfidence: 0, consensusConfidence: 0, sourceQuality: 0, faithfulnessConfidence: null },
+    evidence,
+    consensusTimeline: [...byYear.values()].sort((a, b) => a.year - b.year),
     explanation: (data.explanation || []).map((ex: any) => ({
       id: ex.sentenceId,
       text: ex.text,
       status: ex.status,
-      confidence: ex.nliConfidence || 0.95,
-      evidenceIds: ex.citedEvidenceIds || []
+      confidence: Math.round((ex.nliConfidence ?? 0) * 100),
+      evidenceIds: ex.citedEvidenceIds || [],
     })),
-    modelVersion: data.versionMetadata?.modelVersion || 'qwen3-8b-v1.2'
+    modelVersion: data.versionMetadata?.modelVersion || '',
+    status: data.status,
+    mode: data.mode || undefined,
+    modeEffective: data.modeEffective || undefined,
+    probabilities: data.probabilities || undefined,
+    needsReview: data.needsReview ?? undefined,
+    reviewThreshold: data.reviewThreshold ?? undefined,
+    gate: data.gate || null,
+    notes: data.notes || [],
+    summary: summary
+      ? { writer: summary.writer, why: summary.why, caveats: summary.caveats || [], nextSteps: summary.nextSteps || [], strength: summary.strength }
+      : null,
+    suggestions: data.suggestions || [],
+    disclaimer: data.disclaimer || null,
   }
 }
 

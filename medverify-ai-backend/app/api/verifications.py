@@ -1,9 +1,11 @@
 """
 MedVerify AI - Verifications API Router
 
-Stage 9: Real AI Pipeline Integration
-Replaces Stage 3 mock pipeline with the unified MedVerify Orchestrator
-that wires: Disease Classifier -> Hybrid Retrieval -> Consensus NLI -> Verdict
+Runs the inference pipeline (gate -> retrieval -> rerank -> pair classification
+-> meta-model -> abstain check -> explanation) in a worker thread and persists
+progress and results for polling / SSE.
+
+Verification modes: static (local FAISS), live (PubMed), hybrid (both).
 """
 
 import uuid
@@ -23,171 +25,174 @@ from app.schemas.dto import (
     VerificationStatusResponseDTO,
     VerificationReportDTO,
     CredibilityBreakdownDTO,
-    ConsensusDTO,
     ExplanationSentenceDTO,
     EvidenceItemDTO,
-    VersionMetadataDTO
 )
-from app.services.orchestrator import get_orchestrator
+from app.pipeline import Mode, PipelineError
+from app.pipeline.orchestrator import get_pipeline
 from app.services.image_claim_extractor import extract_claim_from_image
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["Verifications"])
 
+TERMINAL_STATES = [
+    VerificationStatusEnum.COMPLETED,
+    VerificationStatusEnum.FAILED,
+    VerificationStatusEnum.REFUSED_SAFETY,
+    VerificationStatusEnum.REJECTED_NON_MEDICAL,
+]
 
-# ---------------------------------------------------------------------------
-# REAL AI VERIFICATION PIPELINE (replaces Stage 3 mock)
-# ---------------------------------------------------------------------------
+# pipeline stage key -> (status, progress %). The status enum values pre-date the
+# rewrite; their meaning now is: EXTRACTING = validate + gate, RANKING = rerank,
+# CLASSIFYING = pair classifier, CONSENSUS = meta-model + abstain check.
+STAGE_STATUS = {
+    "validate": (VerificationStatusEnum.EXTRACTING, 5),
+    "gate": (VerificationStatusEnum.EXTRACTING, 15),
+    "retrieve": (VerificationStatusEnum.RETRIEVING, 30),
+    "rerank": (VerificationStatusEnum.RANKING, 50),
+    "classify": (VerificationStatusEnum.CLASSIFYING, 65),
+    "meta": (VerificationStatusEnum.CONSENSUS, 80),
+    "explain": (VerificationStatusEnum.GENERATING, 90),
+}
 
-async def run_real_verification_pipeline(verification_id: str, raw_text: str, disease_category_override: str = None):
-    """
-    Background task that executes the real AI verification pipeline
-    with state-machine progress updates persisted to the database.
-    """
-    orchestrator = get_orchestrator()
+SOURCE_DISPLAY = {
+    "PUBHEALTH": "PUBHEALTH fact-check",
+    "HEALTHVER": "HealthVer abstract",
+    "PUBMED": "PubMed abstract",
+}
 
-    # Define pipeline stages with progress percentages
-    stages = [
-        (VerificationStatusEnum.EXTRACTING, 10, "Extracting verifiable atomic claim assertion..."),
-        (VerificationStatusEnum.CLASSIFYING, 25, "Classifying medical domain using fine-tuned BioBERT (biomedical domain model)..."),
-        (VerificationStatusEnum.RETRIEVING, 45, "Retrieving evidence from FAISS vector store & live PubMed API..."),
-        (VerificationStatusEnum.RANKING, 65, "Ranking evidence quality by source tier and recency..."),
-        (VerificationStatusEnum.CONSENSUS, 80, "Analyzing reliability-weighted medical consensus via NLI..."),
-        (VerificationStatusEnum.GENERATING, 90, "Generating grounded explanation with sentence citations..."),
-        (VerificationStatusEnum.VERIFYING, 95, "Evaluating faithfulness (NLI entailment + BioScope certainty)..."),
-    ]
+VERDICT_ENUM = {
+    "Supported": VerdictEnum.SUPPORTED,
+    "Contradicted": VerdictEnum.CONTRADICTED,
+    "Insufficient Evidence": VerdictEnum.INSUFFICIENT,
+}
 
-    # Safety refusal check (fast path) — Stage 11 Safety Guardrail
-    safety_result = orchestrator.check_safety_refusal(raw_text)
-    if not safety_result.is_safe_to_verify:
-        db = next(get_db())
-        try:
-            ver = db.query(VerificationModel).filter(VerificationModel.id == verification_id).first()
-            if ver:
-                ver.status = VerificationStatusEnum.REFUSED_SAFETY
-                ver.progress_percentage = 100
-                reason = safety_result.emergency_message or safety_result.refusal_reason or "Refused: Safety guardrail triggered."
-                ver.current_step_label = f"Refused: {reason[:200]}"
-                db.commit()
-        finally:
-            db.close()
-        return
 
-    # Update progress through pipeline stages (real processing happens during CONSENSUS)
-    for i, (status_enum, progress, label) in enumerate(stages):
-        db = next(get_db())
-        try:
-            ver = db.query(VerificationModel).filter(VerificationModel.id == verification_id).first()
-            if ver:
-                ver.status = status_enum
-                ver.progress_percentage = progress
-                ver.current_step_label = label
-                db.commit()
-        finally:
-            db.close()
-
-        # Real AI inference happens during CONSENSUS stage
-        if status_enum == VerificationStatusEnum.CONSENSUS:
-            # Run the real AI pipeline (this is the heavy computation)
-            result = orchestrator.verify(raw_text, disease_category_override)
-        else:
-            # Brief pause for other stages to show progress in UI
-            await asyncio.sleep(0.2)
-
-    # Final stage: persist results
+def _update(verification_id: str, **fields) -> None:
     db = next(get_db())
     try:
         ver = db.query(VerificationModel).filter(VerificationModel.id == verification_id).first()
-        claim = db.query(ClaimModel).filter(ClaimModel.id == ver.claim_id).first() if ver else None
-
-        if ver and result.get("status") == "COMPLETED":
-            # Update claim with classified disease category
-            if claim:
-                claim.disease_category = result.get("disease_category", "Diabetes")
-
-            # Map verdict string to VerdictEnum
-            verdict_str = result.get("verdict", "Insufficient Evidence")
-            verdict_enum_map = {
-                "Supported": VerdictEnum.SUPPORTED,
-                "Contradicted": VerdictEnum.CONTRADICTED,
-                "Insufficient Evidence": VerdictEnum.INSUFFICIENT,
-                "Mixed": VerdictEnum.MIXED,
-            }
-            ver.verdict = verdict_enum_map.get(verdict_str, VerdictEnum.INSUFFICIENT)
-            ver.credibility_score = result.get("credibility_score", 50.0)
-            ver.credibility_breakdown = result.get("credibility_breakdown")
-            ver.consensus_summary = result.get("consensus_summary")
-            ver.version_metadata = result.get("version_metadata")
-
-            ver.population_analysis = result.get("population_analysis")
-
-            # Store Stage 10 dual-pass verified explanation sentences
-            explanation_sentences = result.get("explanation_sentences", [])
-            evidence_citations = result.get("evidence_citations", [])
-
-            if not explanation_sentences and evidence_citations:
-                for i, ev in enumerate(evidence_citations[:3]):
-                    explanation_sentences.append({
-                        "sentenceId": f"s-{i+1}",
-                        "text": f"Evidence from {ev.get('source_type', 'PubMed')}: {ev.get('title', '')}",
-                        "status": "verified" if ev.get("stance") == "supporting" else (
-                            "contradiction" if ev.get("stance") == "contradicting" else "unsupported"
-                        ),
-                        "nliConfidence": ev.get("nli_confidence", 0.0),
-                        "certaintyLevel": 2,
-                        "citedEvidenceIds": [ev.get("id", "")],
-                    })
-            ver.explanation_json = explanation_sentences
-
-            # Persist evidence citations to DB
-            for ev in evidence_citations:
-                citation = EvidenceCitationModel(
-                    id=ev["id"],
-                    verification_id=verification_id,
-                    title=ev.get("title", ""),
-                    source_type=ev.get("source_type", "PubMed Article"),
-                    authors=None,
-                    pub_year=ev.get("pub_year"),
-                    doi=ev.get("doi", ""),
-                    reliability_score=ev.get("reliability_score", 0.5),
-                    applicability_score=ev.get("applicability_score", 1.0),
-                    population_match_type=ev.get("population_match_type", "UNKNOWN"),
-                    stance=ev.get("stance", "neutral"),
-                    abstract_chunk=ev.get("abstract_chunk", ""),
-                    url=ev.get("url", ""),
-                )
-                db.add(citation)
-
-            ver.status = VerificationStatusEnum.COMPLETED
-            ver.progress_percentage = 100
-            ver.current_step_label = f"Verification completed. Verdict: {verdict_str} ({ver.credibility_score:.1f}%)"
-            ver.completed_at = datetime.utcnow()
-
+        if ver:
+            for k, v in fields.items():
+                setattr(ver, k, v)
             db.commit()
-            logger.info(
-                f"[Pipeline] Verification {verification_id} completed: "
-                f"verdict={verdict_str}, credibility={ver.credibility_score:.1f}%, "
-                f"evidence={len(evidence_citations)}, elapsed={result.get('elapsed_seconds', 0):.1f}s"
-            )
-        else:
-            ver.status = VerificationStatusEnum.FAILED
-            ver.progress_percentage = 100
-            ver.current_step_label = "Verification failed due to pipeline error."
-            db.commit()
-    except Exception as e:
-        logger.error(f"[Pipeline] Error persisting verification results: {e}")
-        try:
-            ver = db.query(VerificationModel).filter(VerificationModel.id == verification_id).first()
-            if ver:
-                ver.status = VerificationStatusEnum.FAILED
-                ver.progress_percentage = 100
-                ver.current_step_label = f"Pipeline error: {str(e)[:100]}"
-                db.commit()
-        except Exception:
-            pass
     finally:
         db.close()
+
+
+def run_verification_pipeline(verification_id: str, raw_text: str, mode_value: str) -> None:
+    """
+    Background task (plain ``def`` so Starlette runs it in a worker thread and the
+    event loop -- and therefore SSE streaming -- stays responsive during inference).
+    """
+    pipeline = get_pipeline()
+
+    def progress(stage: str, label: str) -> None:
+        st, pct = STAGE_STATUS[stage]
+        _update(verification_id, status=st, progress_percentage=pct, current_step_label=label)
+
+    try:
+        result = pipeline.verify(raw_text, Mode.parse(mode_value), progress)
+    except (PipelineError, ValueError) as exc:
+        logger.error("[pipeline] %s failed: %s", verification_id, exc)
+        _update(verification_id, status=VerificationStatusEnum.FAILED, progress_percentage=100,
+                current_step_label=f"Pipeline error: {str(exc)[:200]}")
+        return
+    except Exception as exc:  # never leave a verification stuck in a non-terminal state
+        logger.exception("[pipeline] unexpected failure for %s", verification_id)
+        _update(verification_id, status=VerificationStatusEnum.FAILED, progress_percentage=100,
+                current_step_label=f"Unexpected error: {type(exc).__name__}")
+        return
+
+    _persist_result(verification_id, result)
+
+
+def _persist_result(verification_id: str, result: dict) -> None:
+    db = next(get_db())
+    try:
+        ver = db.query(VerificationModel).filter(VerificationModel.id == verification_id).first()
+        if not ver:
+            return
+        status_name = result["status"]
+        ver.mode = result.get("mode")
+        ver.mode_effective = result.get("mode_effective")
+        ver.gate_result = result.get("gate")
+
+        if status_name == "REFUSED_SAFETY":
+            ver.status = VerificationStatusEnum.REFUSED_SAFETY
+            ver.current_step_label = f"Refused: {result.get('reason', '')[:200]}"
+            ver.pipeline_trace = {"disclaimer": result.get("disclaimer"), "safety": result.get("safety_action")}
+        elif status_name == "REJECTED_NON_MEDICAL":
+            ver.status = VerificationStatusEnum.REJECTED_NON_MEDICAL
+            ver.current_step_label = f"Not a medical claim: {result.get('reason', '')[:200]}"
+        else:
+            expl = result["explanation"]
+            ver.verdict = VERDICT_ENUM[result["verdict"]]
+            ver.credibility_score = round(100 * result["confidence"], 1)
+            ver.system_confidence = ver.credibility_score
+            ver.faithfulness_score = expl["faithfulness_confidence"]
+            ver.credibility_breakdown = result["credibility_breakdown"]
+            ver.version_metadata = result["versions"]
+            ver.probabilities = result["probabilities"]
+            ver.needs_review = result["needs_review"]
+            ver.explanation_json = [
+                {
+                    "sentenceId": x["id"], "text": x["text"], "status": x["status"], "role": x["role"],
+                    "nliConfidence": x["confidence"], "certaintyLevel": x["certainty"],
+                    "citedEvidenceIds": x["evidence_ids"],
+                }
+                for x in expl["sentences"]
+            ]
+            ver.pipeline_trace = {
+                "notes": result["notes"],
+                "trace": result["trace"],
+                "suggestions": result["suggestions"],
+                "reviewThreshold": result["review_threshold"],
+                "disclaimer": result["disclaimer"],
+                "explanationSummary": {
+                    "writer": expl["source"], "why": expl["why"], "caveats": expl["caveats"],
+                    "nextSteps": expl["next_steps"], "strength": expl["strength"],
+                },
+            }
+            for e in result["evidence"]:
+                db.add(EvidenceCitationModel(
+                    id=e["id"], verification_id=verification_id, title=e["title"] or "(untitled)",
+                    source_type=SOURCE_DISPLAY.get(e["source"], e["source"]), pub_year=e["year"],
+                    pmid=e["pmid"], doi=e["doi"], similarity=e["dense_sim"] or 0.0,
+                    reliability_score=e["rerank"], stance=e["stance"], abstract_chunk=e["text"],
+                    url=e["url"], pool=e["pool"], stance_probs=e["probs"],
+                ))
+            ver.status = VerificationStatusEnum.COMPLETED
+            flag = " \u2014 needs review" if result["needs_review"] else ""
+            ver.current_step_label = (
+                f"Verdict: {result['verdict']} ({ver.credibility_score:.1f}% confidence){flag}"
+            )
+        ver.progress_percentage = 100
+        ver.completed_at = datetime.utcnow()
+        db.commit()
+        logger.info("[pipeline] %s -> %s in %ss", verification_id, status_name, result.get("elapsed_seconds"))
+    except Exception:
+        logger.exception("[pipeline] could not persist %s", verification_id)
+        db.rollback()
+        _update(verification_id, status=VerificationStatusEnum.FAILED, progress_percentage=100,
+                current_step_label="Could not store the verification result.")
+    finally:
+        db.close()
+
+
+def _require_pipeline(mode_value: str) -> Mode:
+    """Validate the mode and refuse (503) rather than fabricate when models are not loaded."""
+    try:
+        mode = Mode.parse(mode_value)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    p = get_pipeline()
+    if not p.loaded:
+        detail = ("The inference pipeline failed to load: " + p.load_error) if p.load_error \
+            else "The inference pipeline is still loading. Please retry in a moment."
+        raise HTTPException(status_code=503, detail=detail)
+    return mode
 
 
 # ---------------------------------------------------------------------------
@@ -203,117 +208,49 @@ def submit_claim(
     db: Session = Depends(get_db),
     current_user: Optional[UserModel] = Depends(get_current_user_optional),
 ):
-    """
-    Submit a medical claim for verification.
-    Returns immediately with a verification ID for polling.
-    The real AI pipeline runs asynchronously in the background.
-    """
-    claim_id = f"clm-{uuid.uuid4().hex[:8]}"
-    verification_id = f"ver-{uuid.uuid4().hex[:8]}"
-
-    # Quick disease category detection for initial DB record
-    orchestrator = get_orchestrator()
-    initial_disease = payload.diseaseCategory or orchestrator.classify_disease(payload.rawText)
-
-    # Persist claim linked to current_user if authenticated
-    claim = ClaimModel(
-        id=claim_id,
-        user_id=current_user.id if current_user else None,
-        raw_text=payload.rawText,
-        extracted_claim=payload.rawText,
-        disease_category=initial_disease,
-        language=payload.language
-    )
-    db.add(claim)
-
-    # Persist verification in CREATED status
-    ver = VerificationModel(
-        id=verification_id,
-        claim_id=claim_id,
-        status=VerificationStatusEnum.CREATED,
-        progress_percentage=0,
-        current_step_label="Verification request accepted. Queuing AI pipeline..."
-    )
-    db.add(ver)
-    db.commit()
-
-    # Launch real AI pipeline in background
-    background_tasks.add_task(
-        run_real_verification_pipeline,
-        verification_id,
-        payload.rawText,
-        payload.diseaseCategory,
-    )
-
-    return SubmitClaimResponseDTO(
-        claimId=claim_id,
-        verificationId=verification_id,
-        status="CREATED",
-        submittedAt=datetime.utcnow().isoformat() + "Z",
-        pollUrl=f"/api/verifications/{verification_id}"
-    )
+    """Queue a text claim. The pipeline runs in the background; poll or stream for progress."""
+    mode = _require_pipeline(payload.mode)
+    return _queue(payload.rawText, mode, payload.language, "Verification request accepted. Starting pipeline...",
+                  background_tasks, db, current_user)
 
 
 @router.post("/claims/image", response_model=SubmitClaimResponseDTO, status_code=status.HTTP_202_ACCEPTED)
 async def submit_claim_image(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    diseaseCategory: Optional[str] = Form(None),
-    background_tasks: BackgroundTasks = BackgroundTasks(),
+    mode: str = Form("static"),
+    diseaseCategory: Optional[str] = Form(None),  # deprecated, ignored
     db: Session = Depends(get_db),
     current_user: Optional[UserModel] = Depends(get_current_user_optional),
 ):
-    """
-    Submit a medical claim by uploading an image (screenshot, infographic, WhatsApp forward).
-    Extracts text via OCR, isolates the medical claim, and queues the verification pipeline.
-    """
+    """Queue a claim extracted by OCR from an uploaded screenshot / infographic."""
+    mode_enum = _require_pipeline(mode)
     content = await file.read()
     if not content:
         raise HTTPException(status_code=400, detail="Uploaded file is empty.")
-
     extraction = extract_claim_from_image(content, filename=file.filename or "upload.jpg")
-    extracted_claim_text = extraction["extracted_claim"]
+    return _queue(extraction["extracted_claim"], mode_enum, "en",
+                  f"Image processed ({file.filename}). Starting pipeline...", background_tasks, db, current_user)
 
+
+def _queue(text: str, mode: Mode, language: str, label: str, background_tasks: BackgroundTasks,
+           db: Session, current_user: Optional[UserModel]) -> SubmitClaimResponseDTO:
     claim_id = f"clm-{uuid.uuid4().hex[:8]}"
     verification_id = f"ver-{uuid.uuid4().hex[:8]}"
-
-    orchestrator = get_orchestrator()
-    initial_disease = diseaseCategory or orchestrator.classify_disease(extracted_claim_text)
-
-    claim = ClaimModel(
-        id=claim_id,
-        user_id=current_user.id if current_user else None,
-        raw_text=extracted_claim_text,
-        extracted_claim=extracted_claim_text,
-        disease_category=initial_disease,
-        language="en"
-    )
-    db.add(claim)
-
-    ver = VerificationModel(
-        id=verification_id,
-        claim_id=claim_id,
-        status=VerificationStatusEnum.CREATED,
-        progress_percentage=0,
-        current_step_label=f"Image processed ({file.filename}). Queuing AI verification pipeline..."
-    )
-    db.add(ver)
+    db.add(ClaimModel(
+        id=claim_id, user_id=current_user.id if current_user else None, raw_text=text,
+        extracted_claim=text, disease_category=None, language=language,
+    ))
+    db.add(VerificationModel(
+        id=verification_id, claim_id=claim_id, status=VerificationStatusEnum.CREATED,
+        progress_percentage=0, current_step_label=label, mode=mode.value,
+    ))
     db.commit()
-
-    background_tasks.add_task(
-        run_real_verification_pipeline,
-        verification_id,
-        extracted_claim_text,
-        diseaseCategory,
-    )
-
+    background_tasks.add_task(run_verification_pipeline, verification_id, text, mode.value)
     return SubmitClaimResponseDTO(
-        claimId=claim_id,
-        verificationId=verification_id,
-        status="CREATED",
-        submittedAt=datetime.utcnow().isoformat() + "Z",
-        pollUrl=f"/api/verifications/{verification_id}"
+        claimId=claim_id, verificationId=verification_id, status="CREATED",
+        submittedAt=datetime.utcnow().isoformat() + "Z", pollUrl=f"/api/verifications/{verification_id}",
     )
-
 
 
 @router.get("/verifications/{verificationId}", response_model=VerificationStatusResponseDTO)
@@ -331,11 +268,7 @@ def get_verification_status(verificationId: str, db: Session = Depends(get_db)):
         progressPercentage=ver.progress_percentage,
         currentStepLabel=ver.current_step_label,
         updatedAt=ver.updated_at.isoformat() + "Z",
-        isTerminal=ver.status in [
-            VerificationStatusEnum.COMPLETED,
-            VerificationStatusEnum.FAILED,
-            VerificationStatusEnum.REFUSED_SAFETY,
-        ]
+        isTerminal=ver.status in TERMINAL_STATES
     )
 
 
@@ -358,11 +291,7 @@ async def stream_verification_status(verificationId: str):
 
                 status_val = ver.status.value
                 progress_val = ver.progress_percentage
-                is_terminal = ver.status in [
-                    VerificationStatusEnum.COMPLETED,
-                    VerificationStatusEnum.FAILED,
-                    VerificationStatusEnum.REFUSED_SAFETY,
-                ]
+                is_terminal = ver.status in TERMINAL_STATES
 
                 # Emit status update if progress/status changed or terminal
                 if status_val != last_status or progress_val != last_progress or is_terminal:
@@ -396,111 +325,67 @@ def get_verification_status_alias(verificationId: str, db: Session = Depends(get
     return get_verification_status(verificationId, db)
 
 
+def _evidence_dto(c: EvidenceCitationModel) -> EvidenceItemDTO:
+    return EvidenceItemDTO(
+        id=c.id, title=c.title, sourceType=c.source_type, pool=c.pool, authors=c.authors, pubYear=c.pub_year,
+        pmid=c.pmid, doi=c.doi, similarity=c.similarity or 0.0, relevanceScore=c.reliability_score or 0.0,
+        reliabilityScore=c.reliability_score or 0.0, stance=c.stance, stanceProbs=c.stance_probs,
+        abstractChunk=c.abstract_chunk, url=c.url,
+    )
+
+
 @router.get("/verifications/{verificationId}/evidence", response_model=List[EvidenceItemDTO])
 def get_verification_evidence(verificationId: str, db: Session = Depends(get_db)):
-    """Get retrieved evidence citations for a verification."""
-    citations = db.query(EvidenceCitationModel).filter(
-        EvidenceCitationModel.verification_id == verificationId
-    ).all()
-    if not citations:
-        raise HTTPException(status_code=404, detail="No evidence citations found for this verification")
-
-    return [
-        EvidenceItemDTO(
-            id=c.id,
-            title=c.title,
-            sourceType=c.source_type,
-            authors=c.authors,
-            pubYear=c.pub_year,
-            pmid=getattr(c, "pmid", None),
-            doi=c.doi,
-            similarity=getattr(c, "similarity", 0.0) or 0.0,
-            reliabilityScore=c.reliability_score,
-            applicabilityScore=getattr(c, "applicability_score", 1.0) or 1.0,
-            finalWeight=getattr(c, "final_weight", c.reliability_score) or c.reliability_score,
-            pAge=getattr(c, "p_age", 0.5) or 0.5,
-            pSex=getattr(c, "p_sex", 0.5) or 0.5,
-            pCondition=getattr(c, "p_condition", 0.5) or 0.5,
-            pRegion=getattr(c, "p_region", 0.5) or 0.5,
-            populationMatchType=getattr(c, "population_match_type", "UNKNOWN") or "UNKNOWN",
-            stance=c.stance,
-            abstractChunk=c.abstract_chunk,
-            url=c.url
-        ) for c in citations
-    ]
+    """Evidence the verdict was based on (empty for rejected / refused claims)."""
+    ver = db.query(VerificationModel).filter(VerificationModel.id == verificationId).first()
+    if not ver:
+        raise HTTPException(status_code=404, detail="Verification record not found")
+    citations = db.query(EvidenceCitationModel).filter(EvidenceCitationModel.verification_id == verificationId).all()
+    return [_evidence_dto(c) for c in citations]
 
 
 @router.get("/verifications/{verificationId}/explanation", response_model=List[ExplanationSentenceDTO])
 def get_verification_explanation(verificationId: str, db: Session = Depends(get_db)):
-    """Get grounded explanation sentences with sentence-level faithfulness status."""
+    """Explanation sentences with their faithfulness-audit status."""
     ver = db.query(VerificationModel).filter(VerificationModel.id == verificationId).first()
     if not ver:
         raise HTTPException(status_code=404, detail="Verification record not found")
-
-    return [
-        ExplanationSentenceDTO(**item) for item in (ver.explanation_json or [])
-    ]
+    return [ExplanationSentenceDTO(**item) for item in (ver.explanation_json or [])]
 
 
 @router.get("/verifications/{verificationId}/report", response_model=VerificationReportDTO)
 def get_verification_report(verificationId: str, db: Session = Depends(get_db)):
-    """Get full verification report with evidence, 4D population breakdown, and credibility score."""
+    """Full report: verdict, class probabilities, review flag, evidence, explanation, suggestions."""
     ver = db.query(VerificationModel).filter(VerificationModel.id == verificationId).first()
     if not ver:
         raise HTTPException(status_code=404, detail="Verification record not found")
-
-    citations = db.query(EvidenceCitationModel).filter(
-        EvidenceCitationModel.verification_id == verificationId
-    ).all()
-
-    evidence_dtos = [
-        EvidenceItemDTO(
-            id=c.id,
-            title=c.title,
-            sourceType=c.source_type,
-            authors=c.authors,
-            pubYear=c.pub_year,
-            pmid=getattr(c, "pmid", None),
-            doi=c.doi,
-            similarity=getattr(c, "similarity", 0.0) or 0.0,
-            reliabilityScore=c.reliability_score,
-            applicabilityScore=getattr(c, "applicability_score", 1.0) or 1.0,
-            finalWeight=getattr(c, "final_weight", c.reliability_score) or c.reliability_score,
-            pAge=getattr(c, "p_age", 0.5) or 0.5,
-            pSex=getattr(c, "p_sex", 0.5) or 0.5,
-            pCondition=getattr(c, "p_condition", 0.5) or 0.5,
-            pRegion=getattr(c, "p_region", 0.5) or 0.5,
-            populationMatchType=getattr(c, "population_match_type", "UNKNOWN") or "UNKNOWN",
-            stance=c.stance,
-            abstractChunk=c.abstract_chunk,
-            url=c.url
-        ) for c in citations
-    ]
-
-    explanation_dtos = [
-        ExplanationSentenceDTO(**item) for item in (ver.explanation_json or [])
-    ]
-
-    version_meta = None
-    if ver.version_metadata:
-        version_meta = VersionMetadataDTO(**ver.version_metadata)
-
+    citations = db.query(EvidenceCitationModel).filter(EvidenceCitationModel.verification_id == verificationId).all()
+    trace = ver.pipeline_trace or {}
     return VerificationReportDTO(
         verificationId=ver.id,
         claimId=ver.claim_id,
         rawText=ver.claim.raw_text if ver.claim else "",
         extractedClaim=ver.claim.extracted_claim if ver.claim else "",
-        diseaseCategory=ver.claim.disease_category if ver.claim else "Diabetes",
+        diseaseCategory=None,
         status=ver.status.value,
         completedAt=ver.completed_at.isoformat() + "Z" if ver.completed_at else None,
-        verdict=ver.verdict.value if ver.verdict else "Insufficient Evidence",
-        systemConfidence=ver.credibility_score or 50.0,
+        verdict=ver.verdict.value if ver.verdict else None,
+        systemConfidence=ver.credibility_score,
         credibility=CredibilityBreakdownDTO(**ver.credibility_breakdown) if ver.credibility_breakdown else None,
-        consensus=ConsensusDTO(**ver.consensus_summary) if ver.consensus_summary else None,
-        populationAnalysis=ver.population_analysis,
-        explanation=explanation_dtos,
-        evidence=evidence_dtos,
-        versionMetadata=version_meta,
+        mode=ver.mode,
+        modeEffective=ver.mode_effective,
+        probabilities=ver.probabilities,
+        needsReview=ver.needs_review,
+        reviewThreshold=trace.get("reviewThreshold"),
+        gate=ver.gate_result,
+        notes=trace.get("notes", []),
+        explanationSummary=trace.get("explanationSummary"),
+        suggestions=trace.get("suggestions", []),
+        disclaimer=trace.get("disclaimer"),
+        trace=trace.get("trace"),
+        explanation=[ExplanationSentenceDTO(**item) for item in (ver.explanation_json or [])],
+        evidence=[_evidence_dto(c) for c in citations],
+        versionMetadata=ver.version_metadata,
     )
 
 
@@ -521,10 +406,6 @@ def list_verifications(limit: int = 10, db: Session = Depends(get_db)):
             progressPercentage=v.progress_percentage,
             currentStepLabel=v.current_step_label,
             updatedAt=v.updated_at.isoformat() + "Z",
-            isTerminal=v.status in [
-                VerificationStatusEnum.COMPLETED,
-                VerificationStatusEnum.FAILED,
-                VerificationStatusEnum.REFUSED_SAFETY,
-            ]
+            isTerminal=v.status in TERMINAL_STATES
         ) for v in verifications
     ]

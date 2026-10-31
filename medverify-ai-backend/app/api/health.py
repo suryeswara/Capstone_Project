@@ -29,3 +29,14 @@ def database_health_check(db: Session = Depends(get_db)):
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Database connection error: {str(e)}"
         )
+
+
+@router.get("/health/pipeline")
+def pipeline_health():
+    """Readiness of the inference pipeline (503 until all artifacts are loaded)."""
+    from app.pipeline.orchestrator import get_pipeline
+
+    st = get_pipeline().status()
+    if not st["loaded"]:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=st)
+    return {"status": "ready", **st}
