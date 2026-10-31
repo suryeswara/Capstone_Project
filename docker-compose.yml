@@ -36,7 +36,16 @@ services:
       POSTGRES_DB: medverify_db
       JWT_SECRET_KEY: medverify-super-secret-jwt-key-2026-phase1
       USE_SQLITE_FALLBACK: "false"
-      CONSENSUS_MODE: "population"
+      MEDVERIFY_ARTIFACT_ROOT: /artifacts
+      MEDVERIFY_GATE_STRICTNESS: ${MEDVERIFY_GATE_STRICTNESS:-strict}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      NCBI_API_KEY: ${NCBI_API_KEY:-}
+      NCBI_EMAIL: ${NCBI_EMAIL:-}
+      HF_HOME: /hf-cache
+    volumes:
+      # trained v4 artifacts (models/, vector_db/, meta_models/, gate/) -- not baked into the image
+      - ${MEDVERIFY_ARTIFACTS_DIR:-./artifacts}:/artifacts:ro
+      - hf_cache:/hf-cache
     ports:
       - "8000:8000"
 
@@ -56,3 +65,4 @@ services:
 
 volumes:
   postgres_data:
+  hf_cache:

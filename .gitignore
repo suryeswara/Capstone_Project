@@ -49,3 +49,7 @@ med_datasets/
 .vscode/
 .idea/
 *.swp
+
+# Trained pipeline artifacts (large) -- supplied at deploy time
+medverify-ai-backend/artifacts/
+artifacts/

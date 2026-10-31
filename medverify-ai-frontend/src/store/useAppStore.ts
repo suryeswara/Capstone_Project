@@ -1,6 +1,5 @@
 import { create } from 'zustand'
-import type { VerificationRecord, PipelineStage, DiseaseCategory } from '@/types'
-import { VERIFICATIONS } from '@/lib/mockData'
+import type { VerificationRecord, PipelineStage, DiseaseCategory, VerificationMode } from '@/types'
 import { freshStages } from '@/lib/pipeline'
 import {
   submitClaimApi,
@@ -24,6 +23,8 @@ interface AppState {
   stages: PipelineStage[]
   isRunning: boolean
   result: VerificationRecord | null
+  error: string | null
+  verificationMode: VerificationMode
 
   // Authentication State
   user: UserDTO | null
@@ -37,6 +38,7 @@ interface AppState {
   // Actions
   setActiveClaim: (c: string) => void
   toggleBookmark: (id: string) => void
+  setVerificationMode: (m: VerificationMode) => void
   runVerification: (claim: string) => Promise<void>
   runImageVerification: (file: File) => Promise<void>
   reset: () => void
@@ -51,28 +53,53 @@ interface AppState {
   loadStoredAuth: () => Promise<void>
 }
 
-function pickMockResult(claim: string): VerificationRecord {
-  const lower = claim.toLowerCase()
-  const byKeyword = VERIFICATIONS.find((v) =>
-    lower.includes('statin') || lower.includes('heart') || lower.includes('aspirin')
-      ? v.disease === 'Cardiovascular Disease'
-      : lower.includes('diabetes') || lower.includes('fasting') || lower.includes('insulin')
-      ? v.disease === 'Diabetes'
-      : lower.includes('vaccine') || lower.includes('vaccination') || lower.includes('mmr') || lower.includes('flu')
-      ? v.disease === 'Vaccination'
-      : false
-  )
-  const base = byKeyword ?? VERIFICATIONS[Math.floor(Math.random() * VERIFICATIONS.length)]
-  return {
-    ...base,
-    id: `ver-${Date.now()}`,
-    claim,
-    submittedAt: new Date().toISOString(),
+const POLL_INTERVAL_MS = 500
+const POLL_TIMEOUT_MS = 180_000 // live/hybrid runs include PubMed + explanation; allow up to 3 minutes
+
+type SetFn = (fn: Partial<AppState> | ((s: AppState) => Partial<AppState>)) => void
+
+/** Poll until the backend reports a terminal state, then load the real report. Never fabricates a result. */
+async function trackVerification(verificationId: string, set: SetFn): Promise<void> {
+  const started = Date.now()
+  let label = ''
+  const nStages = freshStages().length
+  for (;;) {
+    const st = await pollStatusApi(verificationId)
+    label = st.currentStepLabel || label
+    const activeIdx = Math.min(nStages - 1, Math.floor((st.progressPercentage / 100) * nStages))
+    set((s) => ({
+      activeClaim: st.rawText || s.activeClaim,
+      stages: s.stages.map((x, i) =>
+        i === activeIdx ? { ...x, status: 'active', detail: st.currentStepLabel } : i < activeIdx ? { ...x, status: 'complete' } : x
+      ),
+    }))
+    if (st.isTerminal) break
+    if (Date.now() - started > POLL_TIMEOUT_MS) throw new Error('The verification is taking too long. Please try again.')
+    await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS))
   }
+  const report = await fetchReportApi(verificationId)
+  if (report.status === 'FAILED') throw new Error(label || 'The verification failed.')
+  // Rejected (not medical) and refused (safety) claims carry no verdict: show the notice, keep them out of history.
+  const result = report.status === 'COMPLETED' ? report : { ...report, statusLabel: label }
+  set((s) => ({
+    isRunning: false,
+    activeClaim: result.claim || s.activeClaim,
+    stages: s.stages.map((x) => ({ ...x, status: 'complete' })),
+    result,
+    history: report.status === 'COMPLETED' ? [result, ...s.history] : s.history,
+  }))
+}
+
+function failRun(err: unknown, set: SetFn): void {
+  const message = err instanceof Error ? err.message : 'The verification service is unavailable.'
+  console.error('[verify] failed:', err)
+  set({ isRunning: false, error: message })
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
-  history: VERIFICATIONS,
+  history: [],
+  error: null,
+  verificationMode: 'static',
   activeClaim: '',
   activeDisease: null,
   stages: freshStages(),
@@ -193,127 +220,30 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
+  setVerificationMode: (m) => set({ verificationMode: m }),
+
   runVerification: async (claim: string) => {
-    const stages = freshStages()
-    set({ isRunning: true, result: null, stages, activeClaim: claim })
-    const { token } = get()
-
+    const { token, verificationMode } = get()
+    set({ isRunning: true, result: null, error: null, stages: freshStages(), activeClaim: claim })
     try {
-      // 1. Submit claim to backend API (passes JWT token if logged in)
-      const { verificationId } = await submitClaimApi(claim, token || undefined)
-
-      // 2. Poll backend status
-      let isDone = false
-      let attempts = 0
-      while (!isDone && attempts < 35) {
-        await new Promise((r) => setTimeout(r, 400))
-        attempts++
-
-        const statusRes = await pollStatusApi(verificationId)
-
-        // Map backend progress percentage to frontend 8 stages
-        const activeIdx = Math.min(
-          stages.length - 1,
-          Math.floor((statusRes.progressPercentage / 100) * stages.length)
-        )
-
-        set((s) => ({
-          stages: s.stages.map((st, idx) =>
-            idx === activeIdx ? { ...st, status: 'active', detail: statusRes.currentStepLabel } : idx < activeIdx ? { ...st, status: 'complete' } : st
-          )
-        }))
-
-        if (statusRes.isTerminal) {
-          isDone = true
-        }
-      }
-
-      // 3. Fetch full report payload
-      const result = await fetchReportApi(verificationId)
-
-      set((s) => ({
-        isRunning: false,
-        stages: s.stages.map((st) => ({ ...st, status: 'complete' })),
-        result,
-        history: [result, ...s.history]
-      }))
-
+      const { verificationId } = await submitClaimApi(claim, verificationMode, token || undefined)
+      await trackVerification(verificationId, set)
     } catch (err) {
-      console.warn("Backend API offline/unreachable, falling back to client simulation:", err)
-
-      let cumulative = 0
-      stages.forEach((stage, idx) => {
-        cumulative += idx === 0 ? 200 : stages[idx - 1].durationMs
-        setTimeout(() => {
-          set((s) => ({
-            stages: s.stages.map((st, i) =>
-              i === idx ? { ...st, status: 'active' } : i < idx ? { ...st, status: 'complete' } : st
-            ),
-          }))
-        }, cumulative)
-      })
-
-      const totalTime = cumulative + stages[stages.length - 1].durationMs
-      setTimeout(() => {
-        set((s) => ({
-          stages: s.stages.map((st) => ({ ...st, status: 'complete' })),
-        }))
-        const result = pickMockResult(claim)
-        set((s) => ({
-          isRunning: false,
-          result,
-          history: [result, ...s.history],
-        }))
-      }, totalTime + 250)
+      failRun(err, set)
     }
   },
 
   runImageVerification: async (file: File) => {
-    const stages = freshStages()
-    set({ isRunning: true, result: null, stages, activeClaim: `[Image: ${file.name}]` })
-    const { token } = get()
-
+    const { token, verificationMode } = get()
+    set({ isRunning: true, result: null, error: null, stages: freshStages(), activeClaim: `[Image: ${file.name}]` })
     try {
-      const { verificationId } = await submitClaimImageApi(file, token || undefined)
-
-      let isDone = false
-      let attempts = 0
-      while (!isDone && attempts < 35) {
-        await new Promise((r) => setTimeout(r, 400))
-        attempts++
-
-        const statusRes = await pollStatusApi(verificationId)
-        const activeIdx = Math.min(
-          stages.length - 1,
-          Math.floor((statusRes.progressPercentage / 100) * stages.length)
-        )
-
-        set((s) => ({
-          activeClaim: statusRes.rawText || s.activeClaim,
-          stages: s.stages.map((st, idx) =>
-            idx === activeIdx ? { ...st, status: 'active', detail: statusRes.currentStepLabel } : idx < activeIdx ? { ...st, status: 'complete' } : st
-          )
-        }))
-
-        if (statusRes.isTerminal) {
-          isDone = true
-        }
-      }
-
-      const result = await fetchReportApi(verificationId)
-      set((s) => ({
-        isRunning: false,
-        activeClaim: result.claim,
-        stages: s.stages.map((st) => ({ ...st, status: 'complete' })),
-        result,
-        history: [result, ...s.history]
-      }))
+      const { verificationId } = await submitClaimImageApi(file, verificationMode, token || undefined)
+      await trackVerification(verificationId, set)
     } catch (err) {
-      console.warn("Backend image verification failed, falling back to client verification:", err)
-      get().runVerification("Drinking lemon water on an empty stomach cures type 2 diabetes.")
+      failRun(err, set)
     }
   },
 
-  reset: () => set({ activeClaim: '', stages: freshStages(), result: null, isRunning: false }),
+  reset: () => set({ activeClaim: '', stages: freshStages(), result: null, isRunning: false, error: null }),
 }))
 

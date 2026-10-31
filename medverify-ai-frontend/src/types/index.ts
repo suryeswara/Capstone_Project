@@ -4,6 +4,10 @@ export type Verdict = 'Supported' | 'Contradicted' | 'Insufficient Evidence' | '
 
 export type SourceType = 'WHO Guideline' | 'CDC Guideline' | 'Systematic Review' | 'RCT' | 'PubMed Article' | 'Cohort Study' | 'Preprint' | string
 
+export type VerificationMode = 'static' | 'live' | 'hybrid'
+
+export type ClassProbabilities = { SUPPORT: number; CONTRADICT: number; NEI: number }
+
 export type EvidenceStance = 'supporting' | 'contradicting' | 'neutral'
 
 export interface EvidenceItem {
@@ -25,6 +29,9 @@ export interface EvidenceItem {
   pRegion?: number
   populationMatchType?: 'MATCHED' | 'PARTIAL' | 'MISMATCHED' | 'UNKNOWN'
   stance: EvidenceStance
+  pool?: 'fc' | 'abs' | 'live'
+  relevanceScore?: number // MonoT5 relevance (0-1)
+  stanceProbs?: ClassProbabilities
   abstract?: string
   abstractChunk?: string
   url?: string
@@ -44,7 +51,7 @@ export interface PipelineStage {
 export interface FaithfulnessSentence {
   id: string
   text: string
-  status: 'verified' | 'unsupported' | 'contradiction' | 'SUPPORTED' | 'PARTIALLY_SUPPORTED' | 'UNSUPPORTED' | 'CERTAINTY_ESCALATION'
+  status: 'verified' | 'unsupported' | 'contradiction' | 'SUPPORTED' | 'PARTIALLY_SUPPORTED' | 'UNSUPPORTED' | 'CERTAINTY_ESCALATION' | 'NOT_AUDITED'
   confidence: number
   evidenceIds: string[]
 }
@@ -54,7 +61,7 @@ export interface CredibilityBreakdown {
   evidenceConfidence: number
   consensusConfidence: number
   sourceQuality: number
-  faithfulnessConfidence: number
+  faithfulnessConfidence: number | null // null = faithfulness audit did not run
 }
 
 export interface ConsensusPoint {
@@ -77,5 +84,24 @@ export interface VerificationRecord {
   explanation: FaithfulnessSentence[]
   modelVersion: string
   bookmarked?: boolean
+  // --- new pipeline fields (absent on demo/sample records) ---
+  status?: string // COMPLETED | REJECTED_NON_MEDICAL | REFUSED_SAFETY | FAILED
+  mode?: VerificationMode
+  modeEffective?: VerificationMode
+  probabilities?: ClassProbabilities
+  needsReview?: boolean
+  reviewThreshold?: number
+  gate?: { decision: string; pMedical: number; reason: string; strictness: string } | null
+  notes?: string[]
+  summary?: {
+    writer: string
+    why: string
+    caveats: string[]
+    nextSteps: string[]
+    strength: { level: 'strong' | 'moderate' | 'weak'; agreement: number; opposing: number; sources: number }
+  } | null
+  suggestions?: { kind: string; text: string; url?: string | null; validation?: { verdict: string; confidence: number; needsReview: boolean } | null }[]
+  disclaimer?: string | null
+  statusLabel?: string
 }
 

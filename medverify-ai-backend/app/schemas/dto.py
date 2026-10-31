@@ -41,7 +41,8 @@ class UserProfileDTO(BaseModel):
 
 class SubmitClaimRequestDTO(BaseModel):
     rawText: str = Field(..., example="Statins reduce the risk of recurrent heart attacks.")
-    diseaseCategory: Optional[str] = Field(None, example="Cardiovascular Disease")
+    mode: str = Field("static", example="static", description="Verification mode: static | live | hybrid")
+    diseaseCategory: Optional[str] = Field(None, description="Deprecated; ignored by the new pipeline")
     language: str = Field("en", example="en")
 
 class SubmitClaimResponseDTO(BaseModel):
@@ -61,21 +62,14 @@ class VerificationStatusResponseDTO(BaseModel):
     updatedAt: str
     isTerminal: bool
 
-class VersionMetadataDTO(BaseModel):
-    modelVersion: str
-    diseaseClassifierVersion: str
-    embeddingVersion: str
-    knowledgeBaseVersion: str
-    rankingFormulaVersion: str
-    promptVersion: str
-    faithfulnessModelVersion: str
+VersionMetadataDTO = Dict[str, str]  # modelVersion, retriever, reranker, gateNli, metaModels, ...
 
 class CredibilityBreakdownDTO(BaseModel):
     overall: float
     evidenceConfidence: float
     consensusConfidence: float
     sourceQuality: float
-    faithfulnessConfidence: float
+    faithfulnessConfidence: Optional[float] = None  # None when the faithfulness audit did not run
 
 class ConsensusDTO(BaseModel):
     weightedConsensusScore: float
@@ -86,7 +80,8 @@ class ConsensusDTO(BaseModel):
 class ExplanationSentenceDTO(BaseModel):
     sentenceId: str
     text: str
-    status: str  # 'SUPPORTED', 'PARTIALLY_SUPPORTED', 'UNSUPPORTED', 'CERTAINTY_ESCALATION'
+    status: str  # 'SUPPORTED', 'PARTIALLY_SUPPORTED', 'UNSUPPORTED', 'CERTAINTY_ESCALATION', 'NOT_AUDITED'
+    role: Optional[str] = None  # why | for | against
     nliConfidence: float
     certaintyLevel: int
     citedEvidenceIds: List[str]
@@ -94,21 +89,17 @@ class ExplanationSentenceDTO(BaseModel):
 class EvidenceItemDTO(BaseModel):
     id: str
     title: str
-    sourceType: str
+    sourceType: str                       # PUBHEALTH fact-check | HealthVer abstract | PubMed
+    pool: Optional[str] = None            # fc | abs | live
     authors: Optional[str] = None
     pubYear: Optional[int] = None
     pmid: Optional[str] = None
     doi: Optional[str] = None
-    similarity: Optional[float] = 0.0
-    reliabilityScore: float                       # R_i
-    applicabilityScore: Optional[float] = 1.0     # P_i
-    finalWeight: Optional[float] = 0.5            # W_i = R_i * P_i
-    pAge: Optional[float] = 0.5                   # A_i
-    pSex: Optional[float] = 0.5                   # S_i
-    pCondition: Optional[float] = 0.5             # C_i
-    pRegion: Optional[float] = 0.5                # G_i
-    populationMatchType: Optional[str] = "UNKNOWN"
-    stance: str
+    similarity: Optional[float] = 0.0     # dense inner product (static pools only)
+    relevanceScore: float = 0.0           # MonoT5 P("true")
+    reliabilityScore: float = 0.0         # legacy alias of relevanceScore
+    stance: str                           # supporting | contradicting | neutral
+    stanceProbs: Optional[Dict[str, float]] = None   # SUPPORT / CONTRADICT / NEI from the pair ensemble
     abstractChunk: Optional[str] = None
     url: Optional[str] = None
 
@@ -124,8 +115,18 @@ class VerificationReportDTO(BaseModel):
     systemConfidence: Optional[float] = None
     credibility: Optional[CredibilityBreakdownDTO] = None
     consensus: Optional[ConsensusDTO] = None
-    populationAnalysis: Optional[Dict[str, Any]] = None
+    mode: Optional[str] = None
+    modeEffective: Optional[str] = None
+    probabilities: Optional[Dict[str, float]] = None
+    needsReview: Optional[bool] = None
+    reviewThreshold: Optional[float] = None
+    gate: Optional[Dict[str, Any]] = None
+    notes: List[str] = []
+    explanationSummary: Optional[Dict[str, Any]] = None  # why, caveats, nextSteps, strength, writer
+    suggestions: List[Dict[str, Any]] = []
+    disclaimer: Optional[str] = None
+    trace: Optional[Dict[str, Any]] = None
     explanation: List[ExplanationSentenceDTO] = []
     evidence: List[EvidenceItemDTO] = []
-    versionMetadata: Optional[VersionMetadataDTO] = None
+    versionMetadata: Optional[Dict[str, str]] = None
 

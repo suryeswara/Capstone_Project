@@ -16,6 +16,8 @@ import app.db.models # Ensure models are registered
 # Safely initialize database tables on startup
 try:
     Base.metadata.create_all(bind=engine)
+    from app.db.migrate import ensure_schema
+    ensure_schema(engine)  # additive columns for databases created before the pipeline rewrite
     logging.info("Database tables initialized successfully.")
 except Exception as e:
     logging.warning(f"Database initialization warning: {e}. FastAPI starting with lazy connection.")
@@ -49,6 +51,29 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
 )
+
+@app.on_event("startup")
+def load_inference_pipeline():
+    """Load models/indexes once, in the background, so the API starts immediately.
+
+    Until loading finishes (or if it fails) /api/claims answers 503 with the reason --
+    the service never falls back to made-up results. Set MEDVERIFY_SKIP_PIPELINE_LOAD=1
+    to start the API without models (auth/DB work, tests).
+    """
+    if os.getenv("MEDVERIFY_SKIP_PIPELINE_LOAD", "").lower() in {"1", "true", "yes"}:
+        logging.warning("Pipeline loading skipped (MEDVERIFY_SKIP_PIPELINE_LOAD set).")
+        return
+    import threading
+    from app.pipeline.orchestrator import get_pipeline
+
+    def _load():
+        try:
+            get_pipeline().load()
+        except Exception as exc:  # reason is kept on the pipeline and surfaced by /health/pipeline
+            logging.error("Inference pipeline unavailable: %s", exc)
+
+    threading.Thread(target=_load, name="pipeline-loader", daemon=True).start()
+
 
 # Include Routers
 app.include_router(health_router)
